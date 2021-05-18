@@ -1,4 +1,4 @@
-namespace TakashiCompany.Unity
+namespace TakashiCompany.Unity.Navigator
 {
 	using System.Collections;
 	using System.Collections.Generic;
