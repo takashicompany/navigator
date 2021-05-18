@@ -63,7 +63,7 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 
-		private int[,] GetSteps(Vector2Int to)
+		public int[,] GetSteps(Vector2Int to)
 		{
 			var width = GetWidth();
 			var height = GetHeight();
