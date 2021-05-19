@@ -63,7 +63,7 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 
-		public int[,] GetSteps(Vector2Int to)
+		public int[,] GetSteps(Vector2Int to, int iteration = 4)
 		{
 			var width = GetWidth();
 			var height = GetHeight();
@@ -79,6 +79,7 @@ namespace TakashiCompany.Unity.Navigator
 			}
 			
 			var positionsByDistance = posHashSet.OrderBy(p => Vector2.Distance(p, to)).ToList();
+			var positionsCount = positionsByDistance.Count;
 
 			var steps = new int[width, height];
 
@@ -92,12 +93,13 @@ namespace TakashiCompany.Unity.Navigator
 
 			steps[to.x, to.y] = 0;	// 目的地なので距離は0
 
-			var count = 4;
-
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < iteration; i++)
 			{
-				foreach (var p in positionsByDistance)
+				for (int j = 0; j < positionsCount; j++)
 				{
+					var pointIndex = i % 2 == 0 ? j : positionsCount - 1 - j;	// iが奇数のときは逆から計算する
+					var p = positionsByDistance[pointIndex];
+
 					// 目的地は計算しない
 					if (p == to)
 					{
@@ -133,57 +135,10 @@ namespace TakashiCompany.Unity.Navigator
 
 					steps[p.x, p.y] = distance;
 				}
-
-				positionsByDistance.Reverse();
 			}
 
 			return steps;
 		}
-
-
-		// private class Walker
-		// {
-		// 	private SimpleMap2d _map;
-		// 	private Vector2Int _dest;
-		// 	private HashSet<Vector2Int> _route;
-		// 	private HashSet<Walker> _goal;
-
-		// 	public Walker(SimpleMap2d map, Vector2Int dest, HashSet<Vector2Int> route, HashSet<Walker> goal)
-		// 	{
-		// 		_map = map;
-		// 		_dest = dest;
-		// 		_route = route;
-		// 		_goal = goal;
-		// 	}
-
-		// 	private Vector2Int Current()
-		// 	{
-		// 		return _route.Last();
-		// 	}
-
-		// 	public bool TryWalk()
-		// 	{
-		// 		var current = Current();
-
-		// 		int count = 0;
-
-		// 		foreach (var d in Map2d.directions)
-		// 		{
-					
-		// 		}
-		// 	}
-
-		// 	private bool CanGoTo(int x, int y)
-		// 	{
-		// 		return CanGoTo(x, y) && !_route.Contains(new Vector2Int(x, y));
-		// 	}
-			
-		// }
-
-		// public override Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY)
-		// {
-			
-		// }
 
 		public bool CanGoTo(Vector2Int p)
 		{
