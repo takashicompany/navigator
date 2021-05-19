@@ -33,6 +33,11 @@ namespace TakashiCompany.Unity.Navigator
 		{
 			return _points[x, y];
 		}
+
+		public T Get(Vector2Int p)
+		{
+			return Get(p.x, p.y);
+		}
 		
 		public abstract Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
 
