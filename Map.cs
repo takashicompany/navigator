@@ -60,6 +60,11 @@ namespace TakashiCompany.Unity.Navigator
 		{
 			return _points.GetLength(1);
 		}
+
+		public Vector2Int GetSize()
+		{
+			return new Vector2Int(GetWidth(), GetHeight());
+		}
 	}
 
 	public class SimpleMap2d : Map2d<bool>
@@ -70,11 +75,16 @@ namespace TakashiCompany.Unity.Navigator
 		{
 
 		}
+
+		public int[,] GetSteps(Vector2Int to, int iteration = 4)
+		{
+			return GetSteps(to, out _, iteration);
+		}
 		
 		/// <summary>
 		/// 各マスの歩数を取得する
 		/// </summary>
-		public int[,] GetSteps(Vector2Int to, int iteration = 4)
+		public int[,] GetSteps(Vector2Int to, out Vector2Int[] sortedPoints, int iteration = 4)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
 		{
 			var width = GetWidth();
 			var height = GetHeight();
@@ -89,8 +99,8 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 			
-			var positionsByDistance = posHashSet.OrderBy(p => Vector2.Distance(p, to)).ToList();
-			var positionsCount = positionsByDistance.Count;
+			var positionsByDistance = posHashSet.OrderBy(p => Vector2.Distance(p, to)).ToArray();
+			var positionsCount = positionsByDistance.Length;
 
 			var steps = new int[width, height];
 
@@ -128,7 +138,30 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 
+			sortedPoints = positionsByDistance;
+
 			return steps;
+		}
+
+		public List<Vector2Int> GetReachablePoints(Vector2Int from, int iteration = 4)
+		{
+			var steps = GetSteps(from, iteration);
+
+			return GetReachablePoints(steps, from);
+		}
+
+		public List<Vector2Int> GetReachablePoints(int[,] steps, Vector2Int from)
+		{
+			var reachables = new List<Vector2Int>();
+			steps.Foreach((p, step) =>
+			{
+				if (CanGoTo(p) && steps[p.x, p.y] != unreachableStep)
+				{
+					reachables.Add(p);
+				}
+			});
+
+			return reachables;
 		}
 
 		/// <summary>
@@ -242,12 +275,24 @@ namespace TakashiCompany.Unity.Navigator
 			return GetRoute(new Vector2Int(fromX, fromY), new Vector2Int(toX, toY));
 		}
 
+		public bool TryGetRoute(Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
+		{
+			route = GetRoute(from, to, enableSlant, iteration);
+			return route != null && route.Length > 0;
+		}
+
 		/// <summary>
 		/// 経路を取得する
 		/// </summary>
 		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4)
 		{
 			var steps = GetSteps(to, iteration);
+
+			return GetRoute(steps, from, to, enableSlant);
+		}
+
+		public Vector2Int[] GetRoute(int[,] steps, Vector2Int from, Vector2Int to, bool enableSlant = false)
+		{
 
 			if (steps[from.x, from.y] == unreachableStep)
 			{
