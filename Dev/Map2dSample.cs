@@ -13,7 +13,11 @@ namespace TakashiCompany.Unity.Navigator.Dev
 
 		private SimpleMap2d _map;
 
+		private Vector2Int? _from;
+
 		private Vector2Int? _to;
+
+		private int _clickCount;
 
 		private void Awake()
 		{
@@ -43,30 +47,81 @@ namespace TakashiCompany.Unity.Navigator.Dev
 		{
 			var grid = new IMGrid(_map.GetWidth(), _map.GetHeight());
 
-			if (_to.HasValue)
+			switch (_clickCount % 3)
 			{
-				var steps = _map.GetSteps(_to.Value);
-				grid.Foreach((x, y) =>
-				{
-					var s = steps[x, y];
-					var str = s.ToString();
-					if (s == int.MaxValue) str = "-";
-					grid.Button(x, y, str, () =>
+				case 0:	// to
 					{
-						_to = new Vector2Int(x, y);
-					});
-				});
-			}
-			else
-			{
-				grid.Foreach((x, y) =>
-				{
-					grid.Button(x, y, _map.Get(x, y) ? "◯" : "x", () =>
+						grid.Foreach((x, y) =>
+						{
+							grid.Button(x, y, _map.Get(x, y) ? "◯" : "x", () =>
+							{
+								_to = new Vector2Int(x, y);
+								_clickCount++;
+							});
+						});
+					}
+					break;
+				case 1:	// from
 					{
-						_to = new Vector2Int(x, y);
-					});
-				});
+						var steps = _map.GetSteps(_to.Value);
+						grid.Foreach((x, y) =>
+						{
+							var s = steps[x, y];
+							var str = s.ToString();
+							if (s == int.MaxValue) str = "-";
+							grid.Button(x, y, str, () =>
+							{
+								_from = new Vector2Int(x, y);
+								_clickCount++;
+							});
+						});
+					}
+
+					break;
+				case 2: // reset
+					{
+						var route = _map.GetRoute(_from.Value, _to.Value);
+
+						grid.Foreach((x, y) =>
+						{
+							if (route.Contains(new Vector2Int(x, y)))
+							{
+								grid.Button(x, y, "", () =>
+								{
+									_from = null;
+									_to = null;
+									_clickCount++;
+								});
+							}
+						});
+					}
+					break;
 			}
+
+			// if (_to.HasValue)
+			// {
+			// 	var steps = _map.GetSteps(_to.Value);
+			// 	grid.Foreach((x, y) =>
+			// 	{
+			// 		var s = steps[x, y];
+			// 		var str = s.ToString();
+			// 		if (s == int.MaxValue) str = "-";
+			// 		grid.Button(x, y, str, () =>
+			// 		{
+			// 			_to = new Vector2Int(x, y);
+			// 		});
+			// 	});
+			// }
+			// else
+			// {
+			// 	grid.Foreach((x, y) =>
+			// 	{
+			// 		grid.Button(x, y, _map.Get(x, y) ? "◯" : "x", () =>
+			// 		{
+			// 			_to = new Vector2Int(x, y);
+			// 		});
+			// 	});
+			// }
 				
 		}
 
