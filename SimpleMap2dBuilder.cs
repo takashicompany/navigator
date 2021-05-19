@@ -67,7 +67,7 @@ namespace TakashiCompany.Unity.Navigator
 				var p = Utils.GetPositionOnGrid(grids, v2int, unitPerGrid).ToV3XZ();
 
 
-				var blocks = Physics.OverlapBox(p, boxSize / 2, Quaternion.identity, blockLayers);
+				var blocks = Physics.OverlapBox(p, boxSize / 2 * 0.99f, Quaternion.identity, blockLayers);
 
 				if (blocks != null && blocks.Length > 0)
 				{
@@ -75,9 +75,9 @@ namespace TakashiCompany.Unity.Navigator
 					return;
 				}
 
-				var grounds = Physics.OverlapBox(p, boxSize / 2, Quaternion.identity, groundLayers);
+				var grounds = Physics.OverlapBox(p, boxSize / 2 * 0.99f, Quaternion.identity, groundLayers);
 
-				if (blocks != null && blocks.Length > 0)
+				if (grounds != null && grounds.Length > 0)
 				{
 					points[v2int.x, v2int.y] = true;
 					return;
