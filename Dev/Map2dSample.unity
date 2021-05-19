@@ -152,17 +152,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2747b6f7be4824332b3a8b6cff1186b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mapStr: '------
+  _mapStr: '--------
 
-    xx----
+    -xxxxxx-
 
-    -x--x-
+    -x----x-
 
-    -x----
+    -x-x--x-
 
-    ------
+    -x-x-xx-
 
-    ------'
+    -x-x-xx-
+
+    -xxx-xx-
+
+    --------'
 --- !u!4 &1245488
 Transform:
   m_ObjectHideFlags: 0
