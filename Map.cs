@@ -9,6 +9,7 @@ namespace TakashiCompany.Unity.Navigator
 	{
 		public enum Direction
 		{
+			None,
 			Foward,
 			Right,
 			Back,
@@ -65,7 +66,6 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 		
-
 		public int[,] GetSteps(Vector2Int to, int iteration = 4)
 		{
 			var width = GetWidth();
@@ -209,7 +209,50 @@ namespace TakashiCompany.Unity.Navigator
 			return distance;
 		}
 
+		private bool TryGetLowerestStepByNexts(int[,] steps, Vector2Int target, out int lowerestStep, out Direction direction)
+		{
+			direction = Direction.None;
 
+			// 通行できないマスはそもそも計算しない
+			if (!CanGoTo((Vector2Int)target))
+			{
+				lowerestStep = unreachableStep;
+				return false;
+			}
+
+			lowerestStep = unreachableStep;
+
+			foreach (var d in Map2d.directions)
+			{
+				var current = target + d.ToV2Int();
+
+				// 通行できないマスは参照しない
+				if (!CanGoTo(current))
+				{
+					continue;
+				}
+
+				if (lowerestStep > steps[current.x, current.y])
+				{
+					lowerestStep = steps[current.x, current.y];
+					direction = d;
+				}
+			}
+
+			return lowerestStep != unreachableStep;
+
+		}
+
+		// public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, int iteration = 4)
+		// {
+		// 	var steps = GetSteps(to, iteration);
+
+		// 	var route = new List<Vector2Int>();
+
+		// 	var current = to;
+
+		// 	while (
+		// }
 
 		public bool CanGoTo(Vector2Int p)
 		{
