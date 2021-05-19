@@ -223,16 +223,36 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 
-		// public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, int iteration = 4)
-		// {
-		// 	var steps = GetSteps(to, iteration);
+		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, int iteration = 4)
+		{
+			var steps = GetSteps(to, iteration);
 
-		// 	var route = new List<Vector2Int>();
+			if (steps[from.x, from.y] == unreachableStep)
+			{
+				return null;
+			}
 
-		// 	var current = to;
+			var route = new List<Vector2Int>() { from };
+			
+			var current = from;
 
-		// 	while (
-		// }
+			while (current != to)
+			{
+				if (!TryGetLowerestStepByNexts(steps, current, out _, out var direction))
+				{
+					// 無いとは思うけど...
+					break;
+				}
+
+				current += direction.ToV2Int();
+
+				route.Add(current);
+			}
+
+			// TODO 斜め移動を許容するオプション
+
+			return route.ToArray();
+		}
 
 		public bool CanGoTo(Vector2Int p)
 		{
