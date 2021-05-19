@@ -232,6 +232,11 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 
+		public override Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY)
+		{
+			return GetRoute(new Vector2Int(fromX, fromY), new Vector2Int(toX, toY));
+		}
+
 		/// <summary>
 		/// 経路を取得する
 		/// </summary>
@@ -310,11 +315,6 @@ namespace TakashiCompany.Unity.Navigator
 			}
 
 			return Get(x, y);
-		}
-
-		public override Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY)
-		{
-			throw new System.NotImplementedException();
 		}
 	}
 
