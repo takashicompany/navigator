@@ -58,10 +58,13 @@ namespace TakashiCompany.Unity.Navigator
 
 	public class SimpleMap2d : Map2d<bool>
 	{
+		public static readonly int unreachableStep = int.MaxValue;
+
 		public SimpleMap2d(bool[,] points) : base(points)
 		{
 
 		}
+		
 
 		public int[,] GetSteps(Vector2Int to, int iteration = 4)
 		{
@@ -87,7 +90,7 @@ namespace TakashiCompany.Unity.Navigator
 			{
 				for (var y = 0; y < height; y++)
 				{
-					steps[x, y] = int.MaxValue;
+					steps[x, y] = unreachableStep;
 				}
 			}
 
@@ -106,39 +109,107 @@ namespace TakashiCompany.Unity.Navigator
 						continue;
 					}
 
-					// 通行できないマスはそもそも計算しない
-					if (!CanGoTo(p))
-					{
-						continue;
-					}
+					var step = CalcStepByNexts(steps, p);
 
-					int distance = int.MaxValue - 1;
+					steps[p.x, p.y] = step;
+				}
 
-					foreach (var d in Map2d.directions)
-					{
-						var current = p + d.ToV2Int();
-
-						// 通行できないマスは参照しない
-						if (!CanGoTo(current))
-						{
-							continue;
-						}
-
-						if (distance > steps[current.x, current.y])
-						{
-							distance = steps[current.x, current.y];
-						}
-
-					}
-
-					distance++;	// 一番低いマスから
-
-					steps[p.x, p.y] = distance;
+				if (iteration / 2 - 1 == i)		// 前後半の合間に一度未到達領域を整理する
+				{
+					TryFillUnreachable(steps);
 				}
 			}
 
 			return steps;
 		}
+
+		public int TryFillUnreachable(int[,] steps)
+		{
+			var unreachables = new HashSet<Vector2Int>();
+
+			for(int x = 0; x < steps.GetLength(0); x++)
+			{
+				for (int y = 0; y < steps.GetLength(1); y++)
+				{
+					if (steps[x, y] == unreachableStep)
+					{
+						unreachables.Add(new Vector2Int(x, y));
+					}
+				}
+			}
+
+			if (unreachables.Count == 0)
+			{
+				return 0;
+			}
+
+			var firstUnreachables = unreachables.Count;
+
+			var prevUnreachable = firstUnreachables;
+
+			var deletes = new HashSet<Vector2Int>();
+
+			do
+			{
+				prevUnreachable = unreachables.Count;
+
+				foreach (var p in unreachables)
+				{
+					var step = CalcStepByNexts(steps, p);
+
+					if (step != unreachableStep)
+					{
+						deletes.Add(p);
+						steps[p.x, p.y] = step;
+					}
+				}
+
+				foreach (var d in deletes)
+				{
+					unreachables.Remove(d);
+				}
+
+			} while(prevUnreachable != unreachables.Count);		// 成果が出る限り続ける
+
+			return firstUnreachables - unreachables.Count;
+		}
+
+		/// <summary>
+		/// 対象のマスの上下左右から一番低い歩数を見つけて、それに1足したものを返す
+		/// </summary>
+		public int CalcStepByNexts(int[,] steps, Vector2Int target)
+		{
+			// 通行できないマスはそもそも計算しない
+			if (!CanGoTo((Vector2Int)target))
+			{
+				return unreachableStep;
+			}
+
+			int distance = unreachableStep - 1;
+
+			foreach (var d in Map2d.directions)
+			{
+				var current = target + d.ToV2Int();
+
+				// 通行できないマスは参照しない
+				if (!CanGoTo(current))
+				{
+					continue;
+				}
+
+				if (distance > steps[current.x, current.y])
+				{
+					distance = steps[current.x, current.y];
+				}
+
+			}
+
+			distance++;	// 一番低いマスから
+
+			return distance;
+		}
+
+
 
 		public bool CanGoTo(Vector2Int p)
 		{
