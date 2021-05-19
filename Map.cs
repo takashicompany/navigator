@@ -179,34 +179,14 @@ namespace TakashiCompany.Unity.Navigator
 		/// </summary>
 		public int CalcStepByNexts(int[,] steps, Vector2Int target)
 		{
-			// 通行できないマスはそもそも計算しない
-			if (!CanGoTo((Vector2Int)target))
+			if (TryGetLowerestStepByNexts(steps, target, out var lowerestStep, out _))
 			{
-				return unreachableStep;
+				if (lowerestStep != unreachableStep) lowerestStep++;
+
+				return lowerestStep;
 			}
 
-			int distance = unreachableStep - 1;
-
-			foreach (var d in Map2d.directions)
-			{
-				var current = target + d.ToV2Int();
-
-				// 通行できないマスは参照しない
-				if (!CanGoTo(current))
-				{
-					continue;
-				}
-
-				if (distance > steps[current.x, current.y])
-				{
-					distance = steps[current.x, current.y];
-				}
-
-			}
-
-			distance++;	// 一番低いマスから
-
-			return distance;
+			return unreachableStep;
 		}
 
 		private bool TryGetLowerestStepByNexts(int[,] steps, Vector2Int target, out int lowerestStep, out Direction direction)
