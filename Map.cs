@@ -66,6 +66,9 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 		
+		/// <summary>
+		/// 各マスの歩数を取得する
+		/// </summary>
 		public int[,] GetSteps(Vector2Int to, int iteration = 4)
 		{
 			var width = GetWidth();
@@ -123,6 +126,9 @@ namespace TakashiCompany.Unity.Navigator
 			return steps;
 		}
 
+		/// <summary>
+		/// マス毎の歩数を見て、未到達領域を再計算する。計算が進捗しなくなったら終わり
+		/// </summary>
 		public int TryFillUnreachable(int[,] steps)
 		{
 			var unreachables = new HashSet<Vector2Int>();
@@ -189,6 +195,9 @@ namespace TakashiCompany.Unity.Navigator
 			return unreachableStep;
 		}
 
+		/// <summary>
+		/// 対象のマスの四方を見て、一番歩数の低いマスと歩数を返す
+		/// </summary>
 		private bool TryGetLowerestStepByNexts(int[,] steps, Vector2Int target, out int lowerestStep, out Direction direction)
 		{
 			direction = Direction.None;
@@ -223,7 +232,10 @@ namespace TakashiCompany.Unity.Navigator
 
 		}
 
-		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, int iteration = 4)
+		/// <summary>
+		/// 経路を取得する
+		/// </summary>
+		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4)
 		{
 			var steps = GetSteps(to, iteration);
 
@@ -251,14 +263,35 @@ namespace TakashiCompany.Unity.Navigator
 
 			// TODO 斜め移動を許容するオプション
 
+			if (enableSlant)
+			{
+				for (int i = 0; i < route.Count - 2; i++)
+				{
+					var now = route[i];
+					var next2 = route[i + 2];
+					
+					// 2マス先は斜めじゃない
+					if (Mathf.Abs(now.x - next2.x) >= 2 || Mathf.Abs(now.y - next2.y) >= 2)
+					{
+						continue;
+					}
+				}
+			}
+
 			return route.ToArray();
 		}
 
+		/// <summary>
+		/// 対象のマスは通行可能か
+		/// </summary>
 		public bool CanGoTo(Vector2Int p)
 		{
 			return CanGoTo(p.x, p.y);
 		}
 
+		/// <summary>
+		/// 対象のマスは通行可能か
+		/// </summary>
 		public bool CanGoTo(int x, int y)
 		{
 			if (IsOutOfBounds(x, y))
@@ -277,6 +310,9 @@ namespace TakashiCompany.Unity.Navigator
 
 	public static class MapExtension
 	{
+		/// <summary>
+		/// 方向をVector2Intに変換
+		/// </summary>
 		public static Vector2Int ToV2Int(this Map2d.Direction self)
 		{
 			switch (self)
