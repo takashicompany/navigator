@@ -262,7 +262,6 @@ namespace TakashiCompany.Unity.Navigator
 			}
 
 			// TODO 斜め移動を許容するオプション
-
 			if (enableSlant)
 			{
 				for (int i = 0; i < route.Count - 2; i++)
@@ -274,6 +273,17 @@ namespace TakashiCompany.Unity.Navigator
 					if (Mathf.Abs(now.x - next2.x) >= 2 || Mathf.Abs(now.y - next2.y) >= 2)
 					{
 						continue;
+					}
+
+					var dir = next2 - now;
+
+					var a = now + Vector2Int.right * dir.x;
+					var b = now + Vector2Int.up * dir.y;
+
+					// 隣が通過可能だったら、いきなり斜めに移動しちゃう
+					if (CanGoTo(a) && CanGoTo(b))
+					{
+						route.RemoveAt(i + 1);
 					}
 				}
 			}
