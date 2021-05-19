@@ -11,6 +11,9 @@ namespace TakashiCompany.Unity.Navigator.Dev
 		[SerializeField, TextArea]
 		private string _mapStr;
 
+		[SerializeField]
+		private bool _slant;
+
 		private SimpleMap2d _map;
 
 		private Vector2Int? _from;
@@ -80,7 +83,7 @@ namespace TakashiCompany.Unity.Navigator.Dev
 					break;
 				case 2: // reset
 					{
-						var route = _map.GetRoute(_from.Value, _to.Value);
+						var route = _map.GetRoute(_from.Value, _to.Value, _slant);
 
 						grid.Foreach((x, y) =>
 						{
