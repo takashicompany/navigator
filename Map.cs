@@ -296,6 +296,7 @@ namespace TakashiCompany.Unity.Navigator
 
 			if (steps[from.x, from.y] == unreachableStep)
 			{
+				Debug.LogError(from + "は到達できない場所です。");
 				return null;
 			}
 
