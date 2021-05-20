@@ -84,7 +84,7 @@ namespace TakashiCompany.Unity.Navigator
 		/// <summary>
 		/// 各マスの歩数を取得する
 		/// </summary>
-		public int[,] GetSteps(Vector2Int to, out Vector2Int[] sortedPoints, int iteration = 4)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
+		public int[,] GetSteps(Vector2Int point, out List<Vector2Int> sortedPointByDinstance, int iteration = 4)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
 		{
 			var width = GetWidth();
 			var height = GetHeight();
@@ -99,8 +99,8 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 			
-			var positionsByDistance = posHashSet.OrderBy(p => Vector2.Distance(p, to)).ToArray();
-			var positionsCount = positionsByDistance.Length;
+			var positionsByDistance = posHashSet.OrderBy(p => Vector2.Distance(p, point)).ToList();
+			var positionsCount = positionsByDistance.Count;
 
 			var steps = new int[width, height];
 
@@ -112,7 +112,7 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 
-			steps[to.x, to.y] = 0;	// 目的地なので距離は0
+			steps[point.x, point.y] = 0;	// 目的地なので距離は0
 
 			for (int i = 0; i < iteration; i++)
 			{
@@ -122,7 +122,7 @@ namespace TakashiCompany.Unity.Navigator
 					var p = positionsByDistance[pointIndex];
 
 					// 目的地は計算しない
-					if (p == to)
+					if (p == point)
 					{
 						continue;
 					}
@@ -138,7 +138,7 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 
-			sortedPoints = positionsByDistance;
+			sortedPointByDinstance = positionsByDistance;
 
 			return steps;
 		}
@@ -365,6 +365,11 @@ namespace TakashiCompany.Unity.Navigator
 			}
 
 			return Get(x, y);
+		}
+
+		public bool CanGoTo(int step)
+		{
+			return step != unreachableStep;
 		}
 	}
 
