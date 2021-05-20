@@ -5,7 +5,7 @@ namespace TakashiCompany.Unity.Navigator
 	using UnityEngine;
 	
 
-	public class SimpleMap2dBuilder : MonoBehaviour
+	public class StaticMap2dBuilder : MonoBehaviour
 	{
 		[SerializeField]
 		private Vector2Int _grids = new Vector2Int(4, 4);
@@ -19,10 +19,10 @@ namespace TakashiCompany.Unity.Navigator
 		[SerializeField]
 		private LayerMask _blockLayers;
 
-		private SimpleMap2d _map;
+		private StaticMap2d _map;
 
 		[ContextMenu("build map")]
-		public SimpleMap2d BuildMap()
+		public StaticMap2d BuildMap()
 		{
 			_map = BuildMapByOverlapBox(_grids, _unitPerGrid, _groundLayers, _blockLayers);
 
@@ -55,7 +55,7 @@ namespace TakashiCompany.Unity.Navigator
 			}
 		}
 
-		public static SimpleMap2d BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
+		public static StaticMap2d BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
 		{
 			var points = new bool[grids.x, grids.y];
 
@@ -84,7 +84,7 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			});
 
-			return new SimpleMap2d(points);
+			return new StaticMap2d(points);
 		}
 	}
 }
