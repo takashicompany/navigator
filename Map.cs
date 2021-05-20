@@ -71,21 +71,74 @@ namespace TakashiCompany.Unity.Navigator
 	{
 		public static readonly int unreachableStep = int.MaxValue;
 
+		private int?[,,,] _cachedStep;
+
+		private Dictionary<Vector2Int, int[,]> _stepDict = new Dictionary<Vector2Int, int[,]>();
+
+		private Dictionary<Vector2Int, IEnumerable<Vector2Int>> _pointsSortedByDistances = new Dictionary<Vector2Int, IEnumerable<Vector2Int>>();
+
 		public StaticMap2d(bool[,] points) : base(points)
 		{
-
+			_cachedStep = new int?[GetWidth(), GetHeight(), GetWidth(), GetHeight()];
 		}
 
-		public int[,] GetSteps(Vector2Int to, int iteration = 4)
+		public void PrepareStepCache()
 		{
-			return GetSteps(to, out _, iteration);
+			for (var x = 0; x < GetWidth(); x++)
+			{
+				for (var y = 0; y < GetHeight(); y++)
+				{
+					GetSteps(new Vector2Int(x, y));
+				}
+			}
+		}
+
+		private void RegistSteps(Vector2Int point, int[,] steps, IEnumerable<Vector2Int> pointsSortedByDistance)
+		{
+			_stepDict[point] = steps;
+
+			for (var x = 0; x < steps.GetLength(0); x++)
+			{
+				for (var y = 0; y < steps.GetLength(1); y++)
+				{
+					var step = steps[x, y];
+					_cachedStep[point.x, point.y, x, y] = step;
+					_cachedStep[x, y, point.x, point.y] = step;
+				}
+			}
+
+			_pointsSortedByDistances[point] = pointsSortedByDistance;
+		}
+
+		private bool TryGetCache(Vector2Int point, out int[,] steps, out IEnumerable<Vector2Int> pointsSortedByDistance)
+		{
+			if (_stepDict.TryGetValue(point, out steps))
+			{
+				pointsSortedByDistance = _pointsSortedByDistances[point];
+				return true;
+			}
+
+			pointsSortedByDistance = null;
+
+			return false;
+		}
+
+		public int[,] GetSteps(Vector2Int to, int iteration = 4, bool useCache = true)
+		{
+			return GetSteps(to, out _, iteration, useCache);
 		}
 		
 		/// <summary>
 		/// 各マスの歩数を取得する
 		/// </summary>
-		public int[,] GetSteps(Vector2Int point, out List<Vector2Int> sortedPointByDinstance, int iteration = 4)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
+		public int[,] GetSteps(Vector2Int point, out List<Vector2Int> pointsSortedByDinstance, int iteration = 4, bool useCache = true)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
 		{
+			if (useCache && TryGetCache(point, out var steps, out var psd))
+			{
+				pointsSortedByDinstance = psd.ToList();
+				return steps;
+			}
+
 			var width = GetWidth();
 			var height = GetHeight();
 			
@@ -99,10 +152,10 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 			
-			var positionsByDistance = posHashSet.OrderBy(p => Vector2.Distance(p, point)).ToList();
-			var positionsCount = positionsByDistance.Count;
+			pointsSortedByDinstance= posHashSet.OrderBy(p => Vector2.Distance(p, point)).ToList();
+			var positionsCount = pointsSortedByDinstance.Count;
 
-			var steps = new int[width, height];
+			steps = new int[width, height];
 
 			for (var x = 0; x < width; x++)
 			{
@@ -119,7 +172,7 @@ namespace TakashiCompany.Unity.Navigator
 				for (int j = 0; j < positionsCount; j++)
 				{
 					var pointIndex = i % 2 == 0 ? j : positionsCount - 1 - j;	// iが奇数のときは逆から計算する
-					var p = positionsByDistance[pointIndex];
+					var p = pointsSortedByDinstance[pointIndex];
 
 					// 目的地は計算しない
 					if (p == point)
@@ -138,7 +191,7 @@ namespace TakashiCompany.Unity.Navigator
 				}
 			}
 
-			sortedPointByDinstance = positionsByDistance;
+			RegistSteps(point, steps, pointsSortedByDinstance.ToArray());
 
 			return steps;
 		}
