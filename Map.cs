@@ -67,11 +67,11 @@ namespace TakashiCompany.Unity.Navigator
 		}
 	}
 
-	public class SimpleMap2d : Map2d<bool>
+	public class StaticMap2d : Map2d<bool>
 	{
 		public static readonly int unreachableStep = int.MaxValue;
 
-		public SimpleMap2d(bool[,] points) : base(points)
+		public StaticMap2d(bool[,] points) : base(points)
 		{
 
 		}
