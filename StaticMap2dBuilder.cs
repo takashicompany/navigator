@@ -33,7 +33,7 @@ namespace TakashiCompany.Unity.Navigator
 		{
 			if (_map == null)
 			{
-				Gizmos.color = Color.red;
+				Gizmos.color = Color.cyan;
 				
 				_grids.Foreach(v2int =>
 				{
@@ -43,14 +43,23 @@ namespace TakashiCompany.Unity.Navigator
 			}
 			else
 			{
-				Gizmos.color = Color.red;
+				
 				_grids.Foreach(v2int =>
 				{
 					var reachable = _map.Get(v2int);
-					if (!reachable) return;
+					
 					var p = Utils.GetPositionOnGrid(_grids, v2int, _unitPerGrid).ToV3XZ();
 
-					Gizmos.DrawWireCube(p, _unitPerGrid.ToV3XZ());
+					if (reachable)
+					{
+						Gizmos.color = Color.cyan;
+						Gizmos.DrawWireCube(p, _unitPerGrid.ToV3XZ());
+					}
+					else
+					{
+						Gizmos.color = Color.red;
+						Gizmos.DrawWireCube(p, _unitPerGrid.ToV3XZ());
+					}
 				});
 			}
 		}
