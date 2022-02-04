@@ -1,10 +1,10 @@
-namespace TakashiCompany.Unity.Navigator.Dev
+namespace takashicompany.Unity.Navigator.Dev
 {
 	using System.Collections;
 	using System.Collections.Generic;
 	using UnityEngine;
 	using System.Linq;
-	using TakashiCompany.Unity;
+	using takashicompany.Unity;
 	
 	public class Map2dSample : MonoBehaviour
 	{
