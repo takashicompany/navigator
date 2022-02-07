@@ -21,10 +21,10 @@ namespace takashicompany.Unity.Navigator
 		[SerializeField]
 		private LayerMask _blockLayers;
 
-		private SimpleNavigator _map;
+		private Map2d<bool> _map;
 
 		[ContextMenu("build map")]
-		public SimpleNavigator BuildMap()
+		public Map2d<bool> BuildMap()
 		{
 			_map = BuildMapByOverlapBox(_grids, _unitPerGrid, _groundLayers, _blockLayers);
 
@@ -48,7 +48,7 @@ namespace takashicompany.Unity.Navigator
 				
 				_grids.Foreach(v2int =>
 				{
-					var reachable = _map.Get(v2int);
+					var reachable = _map[v2int];
 					
 					var p = Utils.GetPositionOnGrid(_grids, v2int, _unitPerGrid).ToV3XZ();
 
@@ -66,7 +66,7 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
-		public static SimpleNavigator BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
+		public static Map2d<bool> BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
 		{
 			var points = new bool[grids.x, grids.y];
 
@@ -95,7 +95,7 @@ namespace takashicompany.Unity.Navigator
 				}
 			});
 
-			return new SimpleNavigator(points);
+			return new Map2d<bool>(points);
 		}
 	}
 }
