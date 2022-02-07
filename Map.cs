@@ -22,14 +22,10 @@ namespace takashicompany.Unity.Navigator
 
 	public interface IMap2d<T>
 	{
-		// T Get(int x, int y);
-		T Get(Vector2Int p);	// TODO 後でどちらかを拡張関数にする
-		Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
+		T Get(Vector2Int p);
+		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to);
 		bool IsInBounds(Vector2Int p);
-		// bool IsOutOfBounds(int x, int y);
-		// int GetWidth();
-		// int GetHeight();
-		Vector2Int GetSize();	// TODO ここも後で拡張関数
+		Vector2Int GetSize();
 	}
 
 	public abstract class Map2d<T> : Map2d, IMap2d<T>
@@ -51,7 +47,7 @@ namespace takashicompany.Unity.Navigator
 			return _points[p.x, p.y];
 		}
 		
-		public abstract Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
+		public abstract Vector2Int[] GetRoute(Vector2Int from, Vector2Int to);
 
 		public bool IsInBounds(Vector2Int p)
 		{
@@ -353,9 +349,9 @@ namespace takashicompany.Unity.Navigator
 
 		}
 
-		public override Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY)
+		public override Vector2Int[] GetRoute(Vector2Int from, Vector2Int to)
 		{
-			return GetRoute(new Vector2Int(fromX, fromY), new Vector2Int(toX, toY));
+			return GetRoute(from, to);
 		}
 
 		public bool TryGetRoute(Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
