@@ -22,13 +22,13 @@ namespace takashicompany.Unity.Navigator
 
 	public interface IMap2d<T>
 	{
-		T Get(int x, int y);
+		// T Get(int x, int y);
 		T Get(Vector2Int p);	// TODO 後でどちらかを拡張関数にする
 		Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
-		bool IsInBounds(int x, int y);
-		bool IsOutOfBounds(int x, int y);
-		int GetWidth();
-		int GetHeight();
+		bool IsInBounds(Vector2Int p);
+		// bool IsOutOfBounds(int x, int y);
+		// int GetWidth();
+		// int GetHeight();
 		Vector2Int GetSize();	// TODO ここも後で拡張関数
 	}
 
@@ -41,41 +41,41 @@ namespace takashicompany.Unity.Navigator
 			_points = points;
 		}
 
-		public T Get(int x, int y)
-		{
-			return _points[x, y];
-		}
+		// public T Get(int x, int y)
+		// {
+		// 	return _points[x, y];
+		// }
 
 		public T Get(Vector2Int p)
 		{
-			return Get(p.x, p.y);
+			return _points[p.x, p.y];
 		}
 		
 		public abstract Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
 
-		public bool IsInBounds(int x, int y)
+		public bool IsInBounds(Vector2Int p)
 		{
-			return 0 <= x && x < _points.GetLength(0) && 0 <= y && y < _points.GetLength(1);
+			return 0 <= p.x && p.x < _points.GetLength(0) && 0 <= p.y && p.y < _points.GetLength(1);
 		}
 
-		public bool IsOutOfBounds(int x, int y)
-		{
-			return !IsInBounds(x, y);
-		}
+		// public bool IsOutOfBounds(int x, int y)
+		// {
+		// 	return !IsInBounds(x, y);
+		// }
 
-		public int GetWidth()
-		{
-			return _points.GetLength(0);
-		}
+		// public int GetWidth()
+		// {
+		// 	return _points.GetLength(0);
+		// }
 
-		public int GetHeight()
-		{
-			return _points.GetLength(1);
-		}
+		// public int GetHeight()
+		// {
+		// 	return _points.GetLength(1);
+		// }
 
 		public Vector2Int GetSize()
 		{
-			return new Vector2Int(GetWidth(), GetHeight());
+			return new Vector2Int( _points.GetLength(0), _points.GetLength(1));
 		}
 	}
 	
@@ -101,7 +101,8 @@ namespace takashicompany.Unity.Navigator
 
 		public StaticMap2d(bool[,] points) : base(points)
 		{
-			_cachedStep = new int?[GetWidth(), GetHeight(), GetWidth(), GetHeight()];
+			var size = GetSize();
+			_cachedStep = new int?[size.x, size.y, size.x, size.y];
 		}
 
 		/// <summary>
@@ -109,9 +110,10 @@ namespace takashicompany.Unity.Navigator
 		/// </summary>
 		public void PrepareStepCache()
 		{
-			for (var x = 0; x < GetWidth(); x++)
+			var size = GetSize();
+			for (var x = 0; x < size.x; x++)
 			{
-				for (var y = 0; y < GetHeight(); y++)
+				for (var y = 0; y < size.y; y++)
 				{
 					GetSteps(new Vector2Int(x, y));
 				}
@@ -163,9 +165,9 @@ namespace takashicompany.Unity.Navigator
 				pointsSortedByDinstance = psd.ToList();
 				return steps;
 			}
-
-			var width = GetWidth();
-			var height = GetHeight();
+			var size = GetSize();
+			var width = size.x;
+			var height = size.y;
 			
 			// 全マスをハッシュセットに登録
 			var posHashSet = new HashSet<Vector2Int>();
@@ -433,20 +435,12 @@ namespace takashicompany.Unity.Navigator
 		/// </summary>
 		public bool CanGoTo(Vector2Int p)
 		{
-			return CanGoTo(p.x, p.y);
-		}
-
-		/// <summary>
-		/// 対象のマスは通行可能か
-		/// </summary>
-		public bool CanGoTo(int x, int y)
-		{
-			if (IsOutOfBounds(x, y))
+			if (this.IsOutOfBounds(p))
 			{
 				return false;
 			}
 
-			return Get(x, y);
+			return Get(p);
 		}
 
 		public bool CanGoTo(int step)
@@ -471,6 +465,11 @@ namespace takashicompany.Unity.Navigator
 			}
 
 			throw new System.NotImplementedException();
+		}
+
+		public static bool IsOutOfBounds<T>(this Map2d<T> map, Vector2Int p)
+		{
+			return !map.IsInBounds(p);
 		}
 	}
 

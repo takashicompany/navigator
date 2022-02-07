@@ -48,7 +48,8 @@ namespace takashicompany.Unity.Navigator.Dev
 
 		private void OnGUI()
 		{
-			var grid = new IMGrid(_map.GetWidth(), _map.GetHeight());
+			var size = _map.GetSize();
+			var grid = new IMGrid(size.x, size.y);
 
 			switch (_clickCount % 3)
 			{
@@ -56,7 +57,7 @@ namespace takashicompany.Unity.Navigator.Dev
 					{
 						grid.Foreach((x, y) =>
 						{
-							grid.Button(x, y, _map.Get(x, y) ? "◯" : "x", () =>
+							grid.Button(x, y, _map.Get(new Vector2Int(x, y)) ? "◯" : "x", () =>
 							{
 								_to = new Vector2Int(x, y);
 								_clickCount++;
