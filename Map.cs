@@ -20,7 +20,19 @@ namespace takashicompany.Unity.Navigator
 		public static readonly Direction[] directions = new Direction[] { Direction.Foward, Direction.Right, Direction.Back, Direction.Left };
 	}
 
-	public abstract class Map2d<T> : Map2d
+	public interface IMap2d<T>
+	{
+		T Get(int x, int y);
+		T Get(Vector2Int p);	// TODO 後でどちらかを拡張関数にする
+		Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
+		bool IsInBounds(int x, int y);
+		bool IsOutOfBounds(int x, int y);
+		int GetWidth();
+		int GetHeight();
+		Vector2Int GetSize();	// TODO ここも後で拡張関数
+	}
+
+	public abstract class Map2d<T> : Map2d, IMap2d<T>
 	{
 		private T[,] _points;
 		
