@@ -20,9 +20,30 @@ namespace takashicompany.Unity.Navigator
 		public static readonly Direction[] directions = new Direction[] { Direction.Foward, Direction.Right, Direction.Back, Direction.Left };
 	}
 
-	public class Points<T> : IEnumerable<KeyValuePair<Vector2Int, T>>
+	public class Map2d<T> : IEnumerable<KeyValuePair<Vector2Int, T>>
 	{
-		private Dictionary<Vector2Int, T> _dict = new Dictionary<Vector2Int, T>();
+		private Dictionary<Vector2Int, T> _dict;
+
+		private Vector2Int _min;
+		private Vector2Int _max;
+
+		public Map2d(Dictionary<Vector2Int, T> dict)
+		{
+			_dict = dict;
+			UpdateSize();
+		}
+
+		public Map2d(T[,] array)
+		{
+			_dict = new Dictionary<Vector2Int, T>();
+
+			array.Foreach((v2Int, v) =>
+			{
+				_dict.Add(v2Int, v);
+			});
+
+			UpdateSize();
+		}
 
 		public T this[int x, int y]
 		{
@@ -52,30 +73,99 @@ namespace takashicompany.Unity.Navigator
 		{
 			return _dict.GetEnumerator();
 		}
+
+		protected void UpdateSize()
+		{
+			var minX = int.MaxValue;
+			var minY = int.MaxValue;
+
+			var maxX = int.MinValue;
+			var maxY = int.MinValue;
+
+			foreach (var kvp in _dict)
+			{
+				var pos = kvp.Key;
+
+				if (pos.x < minX)
+				{
+					minX = pos.x;
+				}
+
+				if (pos.y < minY)
+				{
+					minY = pos.y;
+				}
+
+				if (pos.x > maxX)
+				{
+					pos.x = maxX;
+				}
+
+				if (pos.y > maxY)
+				{
+					pos.y = maxY;
+				}
+			}
+
+			_min = new Vector2Int(minX, minY);
+			_max = new Vector2Int(maxX, maxY);
+		}
+
+		protected void UpdateSize(Vector2Int pos)
+		{
+			var minX = _min.x;
+			var minY = _min.y;
+
+			var maxX = _max.x;
+			var maxY = _max.y;
+
+			if (pos.x < minX)
+			{
+				minX = pos.x;
+			}
+
+			if (pos.y < minY)
+			{
+				minY = pos.y;
+			}
+
+			if (pos.x > maxX)
+			{
+				pos.x = maxX;
+			}
+
+			if (pos.y > maxY)
+			{
+				pos.y = maxY;
+			}
+
+			_min = new Vector2Int(minX, minY);
+			_max = new Vector2Int(maxX, maxY);
+		}
 	}
 
-	public interface IMap2d
+	public interface INavigator
 	{
 		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to);
 		bool IsInBounds(Vector2Int p);
 		Vector2Int GetSize();
 	}
 
-	public interface IMap2d<T> : IMap2d
+	public interface INavigator<T> : INavigator
 	{
 		T Get(Vector2Int p);
 	}
 
-	public interface ICustomMap2d : IMap2d
+	public interface ICustomNavigator : INavigator
 	{
 		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4);
 	}
 
-	public abstract class Map2d<T> : Map2d, IMap2d<T>
+	public abstract class TempNavi<T> : INavigator<T>
 	{
 		private T[,] _points;
 		
-		public Map2d(T[,] points)
+		public TempNavi(T[,] points)
 		{
 			_points = points;
 		}
@@ -101,7 +191,7 @@ namespace takashicompany.Unity.Navigator
 	/// <summary>
 	/// 静的な2次元マップ
 	/// </summary>
-	public class StaticMap2d : Map2d<bool>, ICustomMap2d
+	public class SimpleNavigator : TempNavi<bool>, ICustomNavigator
 	{
 		public static readonly int unreachableStep = int.MaxValue;
 
@@ -118,7 +208,7 @@ namespace takashicompany.Unity.Navigator
 		/// <returns></returns>
 		private Dictionary<Vector2Int, IEnumerable<Vector2Int>> _pointsSortedByDistances = new Dictionary<Vector2Int, IEnumerable<Vector2Int>>();
 
-		public StaticMap2d(bool[,] points) : base(points)
+		public SimpleNavigator(bool[,] points) : base(points)
 		{
 			var size = GetSize();
 			_cachedStep = new int?[size.x, size.y, size.x, size.y];
@@ -338,9 +428,9 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// 対象のマスの四方を見て、一番歩数の低いマスと歩数を返す
 		/// </summary>
-		private bool TryGetLowerestStepByNexts(int[,] steps, Vector2Int target, out int lowerestStep, out Direction direction)
+		private bool TryGetLowerestStepByNexts(int[,] steps, Vector2Int target, out int lowerestStep, out Map2d.Direction direction)
 		{
-			direction = Direction.None;
+			direction = Map2d.Direction.None;
 
 			// 通行できないマスはそもそも計算しない
 			if (!CanGoTo((Vector2Int)target))
@@ -486,12 +576,12 @@ namespace takashicompany.Unity.Navigator
 			throw new System.NotImplementedException();
 		}
 
-		public static bool IsOutOfBounds<T>(this Map2d<T> map, Vector2Int p)
+		public static bool IsOutOfBounds<T>(this TempNavi<T> map, Vector2Int p)
 		{
 			return !map.IsInBounds(p);
 		}
 
-		public static bool TryGetRoute(this ICustomMap2d self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
+		public static bool TryGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
 		{
 			route = self.GetRoute(from, to, enableSlant, iteration);
 			return route != null && route.Length > 0;

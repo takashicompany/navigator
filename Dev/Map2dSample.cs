@@ -14,7 +14,7 @@ namespace takashicompany.Unity.Navigator.Dev
 		[SerializeField]
 		private bool _slant;
 
-		private StaticMap2d _map;
+		private SimpleNavigator _map;
 
 		private Vector2Int? _from;
 
@@ -42,7 +42,7 @@ namespace takashicompany.Unity.Navigator.Dev
 				}
 			}
 
-			_map = new StaticMap2d(maps);
+			_map = new SimpleNavigator(maps);
 			
 		}
 

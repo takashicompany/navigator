@@ -21,10 +21,10 @@ namespace takashicompany.Unity.Navigator
 		[SerializeField]
 		private LayerMask _blockLayers;
 
-		private StaticMap2d _map;
+		private SimpleNavigator _map;
 
 		[ContextMenu("build map")]
-		public StaticMap2d BuildMap()
+		public SimpleNavigator BuildMap()
 		{
 			_map = BuildMapByOverlapBox(_grids, _unitPerGrid, _groundLayers, _blockLayers);
 
@@ -66,7 +66,7 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
-		public static StaticMap2d BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
+		public static SimpleNavigator BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
 		{
 			var points = new bool[grids.x, grids.y];
 
@@ -95,7 +95,7 @@ namespace takashicompany.Unity.Navigator
 				}
 			});
 
-			return new StaticMap2d(points);
+			return new SimpleNavigator(points);
 		}
 	}
 }
