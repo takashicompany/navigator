@@ -20,12 +20,21 @@ namespace takashicompany.Unity.Navigator
 		public static readonly Direction[] directions = new Direction[] { Direction.Foward, Direction.Right, Direction.Back, Direction.Left };
 	}
 
-	public interface IMap2d<T>
+	public interface IMap2d
 	{
-		T Get(Vector2Int p);
 		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to);
 		bool IsInBounds(Vector2Int p);
 		Vector2Int GetSize();
+	}
+
+	public interface IMap2d<T> : IMap2d
+	{
+		T Get(Vector2Int p);
+	}
+
+	public interface ICustomMap2d : IMap2d
+	{
+		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4);
 	}
 
 	public abstract class Map2d<T> : Map2d, IMap2d<T>
@@ -58,7 +67,7 @@ namespace takashicompany.Unity.Navigator
 	/// <summary>
 	/// 静的な2次元マップ
 	/// </summary>
-	public class StaticMap2d : Map2d<bool>
+	public class StaticMap2d : Map2d<bool>, ICustomMap2d
 	{
 		public static readonly int unreachableStep = int.MaxValue;
 
@@ -446,6 +455,12 @@ namespace takashicompany.Unity.Navigator
 		public static bool IsOutOfBounds<T>(this Map2d<T> map, Vector2Int p)
 		{
 			return !map.IsInBounds(p);
+		}
+
+		public static bool TryGetRoute(this ICustomMap2d self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
+		{
+			route = self.GetRoute(from, to, enableSlant, iteration);
+			return route != null && route.Length > 0;
 		}
 	}
 
