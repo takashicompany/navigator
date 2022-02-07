@@ -2,48 +2,107 @@ namespace takashicompany.Unity.Navigator
 {
 	using System.Collections;
 	using System.Collections.Generic;
-	using UnityEngine;
 	using System.Linq;
+	using UnityEngine;
 
-	public abstract class Map2d
+	public abstract class ExtensionableMap2d : Map2d
 	{
-		public enum Direction
-		{
-			None,
-			Foward,
-			Right,
-			Back,
-			Left
-		}
-
-		// System.Enum のGetValuesとかしてもいいけど、重くないか心配なので
-		public static readonly Direction[] directions = new Direction[] { Direction.Foward, Direction.Right, Direction.Back, Direction.Left };
+		
 	}
 
-	public abstract class Map2d<T> : Map2d
+	public abstract class ExtensionableMap2d<T> : ExtensionableMap2d
 	{
-		private T[,] _points;
-		
-		public Map2d(T[,] points)
+		private Dictionary<Vector2Int, T> _points;
+
+		private Vector2Int _min;
+		private Vector2Int _max;
+
+		public ExtensionableMap2d(Dictionary<Vector2Int, T> points)
 		{
 			_points = points;
 		}
 
-		public T Get(int x, int y)
+		protected void UpdateSize()
 		{
-			return _points[x, y];
+			var minX = int.MaxValue;
+			var minY = int.MaxValue;
+
+			var maxX = int.MinValue;
+			var maxY = int.MinValue;
+
+			foreach (var kvp in _points)
+			{
+				var pos = kvp.Key;
+
+				if (pos.x < minX)
+				{
+					minX = pos.x;
+				}
+
+				if (pos.y < minY)
+				{
+					minY = pos.y;
+				}
+
+				if (pos.x > maxX)
+				{
+					pos.x = maxX;
+				}
+
+				if (pos.y > maxY)
+				{
+					pos.y = maxY;
+				}
+			}
+
+			_min = new Vector2Int(minX, minY);
+			_max = new Vector2Int(maxX, maxY);
+		}
+
+		protected void UpdateSize(Vector2Int pos)
+		{
+			var minX = _min.x;
+			var minY = _min.y;
+
+			var maxX = _max.x;
+			var maxY = _max.y;
+
+			if (pos.x < minX)
+			{
+				minX = pos.x;
+			}
+
+			if (pos.y < minY)
+			{
+				minY = pos.y;
+			}
+
+			if (pos.x > maxX)
+			{
+				pos.x = maxX;
+			}
+
+			if (pos.y > maxY)
+			{
+				pos.y = maxY;
+			}
+
+			_min = new Vector2Int(minX, minY);
+			_max = new Vector2Int(maxX, maxY);
 		}
 
 		public T Get(Vector2Int p)
 		{
-			return Get(p.x, p.y);
+			return _points[p];
 		}
 		
 		public abstract Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
 
 		public bool IsInBounds(int x, int y)
 		{
-			return 0 <= x && x < _points.GetLength(0) && 0 <= y && y < _points.GetLength(1);
+			// return 0 <= x && x < _points.GetLength(0) && 0 <= y && y < _points.GetLength(1);
+
+			return _min.x <= x && x <= _max.x && _min.y <= y && y <= _min.y;
 		}
 
 		public bool IsOutOfBounds(int x, int y)
@@ -53,12 +112,12 @@ namespace takashicompany.Unity.Navigator
 
 		public int GetWidth()
 		{
-			return _points.GetLength(0);
+			return _max.x - _min.x;
 		}
 
 		public int GetHeight()
 		{
-			return _points.GetLength(1);
+			return _max.y - _min.y;
 		}
 
 		public Vector2Int GetSize()
@@ -66,30 +125,20 @@ namespace takashicompany.Unity.Navigator
 			return new Vector2Int(GetWidth(), GetHeight());
 		}
 	}
-	
-	/// <summary>
-	/// 静的な2次元マップ
-	/// </summary>
-	public class StaticMap2d : Map2d<bool>
+
+	public class SimpleExtensionableMap2d : ExtensionableMap2d<bool>
 	{
 		public static readonly int unreachableStep = int.MaxValue;
 
-		private int?[,,,] _cachedStep;	// 使ってなくない？
+		private Dictionary<Vector2Int, Dictionary<Vector2Int, int>> _cachedStep; // int?[,,,] _cachedStep;
 
-		/// <summary>
-		/// キーとなるマスから見た各マスへの歩数
-		/// </summary>
-		private Dictionary<Vector2Int, int[,]> _stepDict = new Dictionary<Vector2Int, int[,]>();
+		private Dictionary<Vector2Int, Dictionary<Vector2Int, int>> _stepDict = new Dictionary<Vector2Int, Dictionary<Vector2Int, int>>();
 
-		/// <summary>
-		/// キーとなるマスから見た各マスを距離でソートしたもの
-		/// </summary>
-		/// <returns></returns>
 		private Dictionary<Vector2Int, IEnumerable<Vector2Int>> _pointsSortedByDistances = new Dictionary<Vector2Int, IEnumerable<Vector2Int>>();
 
-		public StaticMap2d(bool[,] points) : base(points)
+		public SimpleExtensionableMap2d(Dictionary<Vector2Int, bool> points) : base(points)
 		{
-			_cachedStep = new int?[GetWidth(), GetHeight(), GetWidth(), GetHeight()];
+
 		}
 
 		/// <summary>
@@ -106,24 +155,15 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
-		private void RegistSteps(Vector2Int point, int[,] steps, IEnumerable<Vector2Int> pointsSortedByDistance)
+		
+		private void RegistSteps(Vector2Int point, Dictionary<Vector2Int, int> steps, IEnumerable<Vector2Int> pointsSortedByDistance)
 		{
 			_stepDict[point] = steps;
-
-			for (var x = 0; x < steps.GetLength(0); x++)
-			{
-				for (var y = 0; y < steps.GetLength(1); y++)
-				{
-					var step = steps[x, y];
-					_cachedStep[point.x, point.y, x, y] = step;
-					_cachedStep[x, y, point.x, point.y] = step;
-				}
-			}
 
 			_pointsSortedByDistances[point] = pointsSortedByDistance;
 		}
 
-		private bool TryGetCache(Vector2Int point, out int[,] steps, out IEnumerable<Vector2Int> pointsSortedByDistance)
+		private bool TryGetCache(Vector2Int point, out Dictionary<Vector2Int, int> steps, out IEnumerable<Vector2Int> pointsSortedByDistance)
 		{
 			if (_stepDict.TryGetValue(point, out steps))
 			{
@@ -136,7 +176,7 @@ namespace takashicompany.Unity.Navigator
 			return false;
 		}
 
-		public int[,] GetSteps(Vector2Int to, int iteration = 4, bool useCache = true)
+		public Dictionary<Vector2Int, int> GetSteps(Vector2Int to, int iteration = 4, bool useCache = true)
 		{
 			return GetSteps(to, out _, iteration, useCache);
 		}
@@ -144,7 +184,7 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// あるマスからの歩数を計算する
 		/// </summary>
-		public int[,] GetSteps(Vector2Int point, out List<Vector2Int> pointsSortedByDinstance, int iteration = 4, bool useCache = true)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
+		public Dictionary<Vector2Int, int> GetSteps(Vector2Int point, out List<Vector2Int> pointsSortedByDinstance, int iteration = 4, bool useCache = true)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
 		{
 			if (useCache && TryGetCache(point, out var steps, out var psd))
 			{
@@ -170,18 +210,18 @@ namespace takashicompany.Unity.Navigator
 			pointsSortedByDinstance= posHashSet.OrderBy(p => Vector2.Distance(p, point)).ToList();
 			var positionsCount = pointsSortedByDinstance.Count;
 
-			steps = new int[width, height];
+			steps = new Dictionary<Vector2Int, int>();
 
 			for (var x = 0; x < width; x++)
 			{
 				for (var y = 0; y < height; y++)
 				{
 					// 一旦、対象のマスからの距離を最大値にしておく
-					steps[x, y] = unreachableStep;
+					steps[new Vector2Int(x, y)] = unreachableStep;
 				}
 			}
 
-			steps[point.x, point.y] = 0;	// 目的地なので距離は0
+			steps[new Vector2Int(point.x, point.y)] = 0;	// 目的地なので距離は0
 
 			for (int i = 0; i < iteration; i++)
 			{
@@ -198,7 +238,7 @@ namespace takashicompany.Unity.Navigator
 
 					var step = CalcStepByNexts(steps, p);
 
-					steps[p.x, p.y] = step;
+					steps[p] = step;
 				}
 
 				if (iteration / 2 - 1 == i)		// 前後半の合間に一度未到達領域を整理する
@@ -219,12 +259,13 @@ namespace takashicompany.Unity.Navigator
 			return GetReachablePoints(steps, from);
 		}
 
-		public List<Vector2Int> GetReachablePoints(int[,] steps, Vector2Int from)
+		public List<Vector2Int> GetReachablePoints(Dictionary<Vector2Int, int> steps, Vector2Int from)
 		{
 			var reachables = new List<Vector2Int>();
+			
 			steps.Foreach((p, step) =>
 			{
-				if (CanGoTo(p) && steps[p.x, p.y] != unreachableStep)
+				if (CanGoTo(p) && steps[p] != unreachableStep)
 				{
 					reachables.Add(p);
 				}
@@ -236,20 +277,17 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// マス毎の歩数を見て、未到達領域を再計算する。計算が進捗しなくなったら終わり
 		/// </summary>
-		public int TryFillUnreachable(int[,] steps)
+		public int TryFillUnreachable(Dictionary<Vector2Int, int> steps)
 		{
 			var unreachables = new HashSet<Vector2Int>();
 
-			for(int x = 0; x < steps.GetLength(0); x++)
+			steps.Foreach((point, step) =>
 			{
-				for (int y = 0; y < steps.GetLength(1); y++)
+				 if (step == unreachableStep)
 				{
-					if (steps[x, y] == unreachableStep)
-					{
-						unreachables.Add(new Vector2Int(x, y));
-					}
+					unreachables.Add(point);
 				}
-			}
+			});
 
 			if (unreachables.Count == 0)
 			{
@@ -273,7 +311,7 @@ namespace takashicompany.Unity.Navigator
 					if (step != unreachableStep)
 					{
 						deletes.Add(p);
-						steps[p.x, p.y] = step;
+						steps[p] = step;
 					}
 				}
 
@@ -290,7 +328,7 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// 対象のマスの上下左右から一番低い歩数を見つけて、それに1足したものを返す
 		/// </summary>
-		public int CalcStepByNexts(int[,] steps, Vector2Int target)
+		public int CalcStepByNexts(Dictionary<Vector2Int, int> steps, Vector2Int target)
 		{
 			if (TryGetLowerestStepByNexts(steps, target, out var lowerestStep, out _))
 			{
@@ -305,7 +343,7 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// 対象のマスの四方を見て、一番歩数の低いマスと歩数を返す
 		/// </summary>
-		private bool TryGetLowerestStepByNexts(int[,] steps, Vector2Int target, out int lowerestStep, out Direction direction)
+		private bool TryGetLowerestStepByNexts(Dictionary<Vector2Int, int> steps, Vector2Int target, out int lowerestStep, out Direction direction)
 		{
 			direction = Direction.None;
 
@@ -328,9 +366,9 @@ namespace takashicompany.Unity.Navigator
 					continue;
 				}
 
-				if (lowerestStep > steps[current.x, current.y])
+				if (lowerestStep > steps[current])
 				{
-					lowerestStep = steps[current.x, current.y];
+					lowerestStep = steps[current];
 					direction = d;
 				}
 			}
@@ -360,10 +398,10 @@ namespace takashicompany.Unity.Navigator
 			return GetRoute(steps, from, to, enableSlant);
 		}
 
-		public Vector2Int[] GetRoute(int[,] steps, Vector2Int from, Vector2Int to, bool enableSlant = false)
+		public Vector2Int[] GetRoute(Dictionary<Vector2Int, int> steps, Vector2Int from, Vector2Int to, bool enableSlant = false)
 		{
 
-			if (steps[from.x, from.y] == unreachableStep)
+			if (steps[from] == unreachableStep)
 			{
 				Debug.LogError(from + "は到達できない場所です。");
 				return null;
@@ -434,7 +472,7 @@ namespace takashicompany.Unity.Navigator
 				return false;
 			}
 
-			return Get(x, y);
+			return Get(new Vector2Int(x, y));
 		}
 
 		public bool CanGoTo(int step)
@@ -442,24 +480,4 @@ namespace takashicompany.Unity.Navigator
 			return step != unreachableStep;
 		}
 	}
-
-	public static class MapExtension
-	{
-		/// <summary>
-		/// 方向をVector2Intに変換
-		/// </summary>
-		public static Vector2Int ToV2Int(this Map2d.Direction self)
-		{
-			switch (self)
-			{
-				case Map2d.Direction.Foward	:	return Vector2Int.up;
-				case Map2d.Direction.Right	:	return Vector2Int.right;
-				case Map2d.Direction.Back	:	return Vector2Int.down;
-				case Map2d.Direction.Left	:	return Vector2Int.left;
-			}
-
-			throw new System.NotImplementedException();
-		}
-	}
-
 }
