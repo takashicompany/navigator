@@ -20,6 +20,40 @@ namespace takashicompany.Unity.Navigator
 		public static readonly Direction[] directions = new Direction[] { Direction.Foward, Direction.Right, Direction.Back, Direction.Left };
 	}
 
+	public class Points<T> : IEnumerable<KeyValuePair<Vector2Int, T>>
+	{
+		private Dictionary<Vector2Int, T> _dict = new Dictionary<Vector2Int, T>();
+
+		public T this[int x, int y]
+		{
+			get
+			{
+				return _dict[new Vector2Int(x, y)];
+			}
+
+			set
+			{
+				_dict[new Vector2Int(x, y)] = value;
+			}
+		}
+
+		public T this[Vector2Int p]
+		{
+			get { return _dict[p]; }
+			set { _dict[p] = value; }
+		}
+
+		public IEnumerator<KeyValuePair<Vector2Int, T>> GetEnumerator()
+		{
+			return _dict.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return _dict.GetEnumerator();
+		}
+	}
+
 	public interface IMap2d
 	{
 		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to);
