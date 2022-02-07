@@ -13,6 +13,8 @@ namespace takashicompany.Unity.Navigator
 		[SerializeField]
 		private Vector2 _unitPerGrid = Vector2.one;
 
+		public Vector2 unitPerGrid => _unitPerGrid;
+
 		[SerializeField]
 		private LayerMask _groundLayers;
 
