@@ -37,11 +37,6 @@ namespace takashicompany.Unity.Navigator
 			_points = points;
 		}
 
-		// public T Get(int x, int y)
-		// {
-		// 	return _points[x, y];
-		// }
-
 		public T Get(Vector2Int p)
 		{
 			return _points[p.x, p.y];
@@ -53,21 +48,6 @@ namespace takashicompany.Unity.Navigator
 		{
 			return 0 <= p.x && p.x < _points.GetLength(0) && 0 <= p.y && p.y < _points.GetLength(1);
 		}
-
-		// public bool IsOutOfBounds(int x, int y)
-		// {
-		// 	return !IsInBounds(x, y);
-		// }
-
-		// public int GetWidth()
-		// {
-		// 	return _points.GetLength(0);
-		// }
-
-		// public int GetHeight()
-		// {
-		// 	return _points.GetLength(1);
-		// }
 
 		public Vector2Int GetSize()
 		{
