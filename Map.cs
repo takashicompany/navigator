@@ -164,6 +164,7 @@ namespace takashicompany.Unity.Navigator
 
 	
 
+
 	public static class MapExtension
 	{
 		/// <summary>
