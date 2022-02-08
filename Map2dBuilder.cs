@@ -33,82 +33,86 @@ namespace takashicompany.Unity.Navigator
 
 		private void OnDrawGizmos()
 		{
-			// if (_map == null)
-			// {
-			// 	Gizmos.color = Color.cyan;
-				
-			// 	_grids.Foreach(v2int =>
-			// 	{
-			// 		var p = Utils.GetPositionOnGrid(_grids, v2int, _unitPerGrid).ToV3XZ();
-			// 		Gizmos.DrawWireCube(p, _unitPerGrid.ToV3XZ());
-			// 	});
-			// }
-			// else
-			// {
-				
-			// 	_grids.Foreach(v2int =>
-			// 	{
-			// 		var reachable = _map[v2int];
-					
-			// 		var p = Utils.GetPositionOnGrid(_grids, v2int, _unitPerGrid).ToV3XZ();
+			if (!Application.isPlaying)
+			{
+				BuildMap();
+			}
 
-			// 		if (reachable)
-			// 		{
-			// 			Gizmos.color = Color.cyan;
-			// 			Gizmos.DrawWireCube(p, _unitPerGrid.ToV3XZ());
-			// 		}
-			// 		else
-			// 		{
-			// 			Gizmos.color = Color.red;
-			// 			Gizmos.DrawWireCube(p, _unitPerGrid.ToV3XZ());
-			// 		}
-			// 	});
-			// }
+			if (_map != null)
+			{
+				foreach (var kvp in _map)
+				{
+					var point = kvp.Key;
+					var walkable = kvp.Value;
+
+					Gizmos.color = walkable ? Color.green : Color.red;
+
+					var p = new Vector3(unitPerGrid.x * point.x, 0, unitPerGrid.y * point.y);
+
+					Gizmos.DrawCube(p, unitPerGrid.ToV3XZ() * 0.975f);
+				}
+			}
 		}
 
 		public static Map2d<bool> BuildMapByOverlapBox(Transform root, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
 		{
+			if (root == null)
+			{
+				return null;
+			}
+
+			var map = new Map2d<bool>();
+
 			var colliders = root.GetComponentsInChildren<Collider>();
 
-			var boundsList = new List<Bounds>();
+			var bounds = new Bounds();
 
 			foreach (var c in colliders)
 			{
-				boundsList.Add(c.bounds);
+				bounds.Encapsulate(c.bounds);
 			}
 
-			// var bounds = boundsList.
+			var min = GetGridPosition(bounds.min, unitPerGrid);
+			var max = GetGridPosition(bounds.max, unitPerGrid);
 
-			// var points = new bool[grids.x, grids.y];
+			var half = unitPerGrid / 2f;
+			half.y = 10f; // 適当な値。
 
-			// var boxSize = unitPerGrid.ToV3XZ();
-			// boxSize.y = 100f;	// 100は適当に設定しました。
+			for (int x = min.x; x <= max.x; x++)
+			{
+				for (int z = min.y; z <= max.y; z++)
+				{
+					var p = new Vector3(unitPerGrid.x * x, 0, unitPerGrid.y * z);
 
-			// grids.Foreach(v2int =>
-			// {
-			// 	var p = Utils.GetPositionOnGrid(grids, v2int, unitPerGrid).ToV3XZ();
+					var blocks = Physics.OverlapBox(p, half * 0.99f, Quaternion.identity, blockLayers);
 
+					if (blocks != null && blocks.Length > 0)
+					{
+						map[x, z] = false;
+						continue;
+					}
 
-			// 	var blocks = Physics.OverlapBox(p, boxSize / 2 * 0.99f, Quaternion.identity, blockLayers);
+					var ground = Physics.OverlapBox(p, half * 0.99f, Quaternion.identity, groundLayers);
 
-			// 	if (blocks != null && blocks.Length > 0)
-			// 	{
-			// 		points[v2int.x, v2int.y] = false;
-			// 		return;
-			// 	}
+					if (ground != null && ground.Length > 0)
+					{
+						map[x, z] = true;
+						continue;
+					}
 
-			// 	var grounds = Physics.OverlapBox(p, boxSize / 2 * 0.99f, Quaternion.identity, groundLayers);
+					map[x, z] = false;
+				}
+			}
 
-			// 	if (grounds != null && grounds.Length > 0)
-			// 	{
-			// 		points[v2int.x, v2int.y] = true;
-			// 		return;
-			// 	}
-			// });
+			return map;
+		}
 
-			// return new Map2d<bool>(points);
+		public static Vector2Int GetGridPosition(Vector3 p, Vector2 unitPerGrid)
+		{
+			var x = (int)System.Math.Round(p.x / unitPerGrid.x, System.MidpointRounding.AwayFromZero);
+			var z = (int)System.Math.Round(p.z / unitPerGrid.y, System.MidpointRounding.AwayFromZero);		// zはyで割る
 
-			return null;
+			return new Vector2Int(x, z);
 		}
 	}
 }
