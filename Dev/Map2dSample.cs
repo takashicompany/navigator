@@ -57,11 +57,11 @@ namespace takashicompany.Unity.Navigator.Dev
 					{
 						grid.Foreach((x, y) =>
 						{
-							grid.Button(x, y, _navigator.Get(new Vector2Int(x, y)) ? "◯" : "x", () =>
-							{
-								_to = new Vector2Int(x, y);
-								_clickCount++;
-							});
+							// grid.Button(x, y, _navigator.Get(new Vector2Int(x, y)) ? "◯" : "x", () =>
+							// {
+							// 	_to = new Vector2Int(x, y);
+							// 	_clickCount++;
+							// });
 						});
 					}
 					break;
@@ -70,14 +70,14 @@ namespace takashicompany.Unity.Navigator.Dev
 						var steps = _navigator.GetSteps(_to.Value);
 						grid.Foreach((x, y) =>
 						{
-							var s = steps[x, y];
-							var str = s.ToString();
-							if (s == int.MaxValue) str = "-";
-							grid.Button(x, y, str, () =>
-							{
-								_from = new Vector2Int(x, y);
-								_clickCount++;
-							});
+							// var s = steps[x, y];
+							// var str = s.ToString();
+							// if (s == int.MaxValue) str = "-";
+							// grid.Button(x, y, str, () =>
+							// {
+							// 	_from = new Vector2Int(x, y);
+							// 	_clickCount++;
+							// });
 						});
 					}
 

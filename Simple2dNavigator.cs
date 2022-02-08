@@ -14,12 +14,12 @@ namespace takashicompany.Unity.Navigator
 
 	public interface INavigator<T> : INavigator
 	{
-		T Get(Vector2Int p);
+		bool TryGet(Vector2Int p, out T v);
 	}
 
 	public interface ICustomNavigator : INavigator
 	{
-		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4);
+		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4, bool useCache = true);
 	}
 
 	public abstract class Navigator2d<T> : INavigator<T>
@@ -31,9 +31,9 @@ namespace takashicompany.Unity.Navigator
 			_map = map;
 		}
 
-		public T Get(Vector2Int p)
+		public bool TryGet(Vector2Int p, out T v)
 		{
-			return _map[p.x, p.y];
+			return _map.TryGet(p, out v);
 		}
 		
 		public abstract Vector2Int[] GetRoute(Vector2Int from, Vector2Int to);
@@ -194,7 +194,7 @@ namespace takashicompany.Unity.Navigator
 			var reachables = new List<Vector2Int>();
 			foreach (var s in steps)
 			{
-				if (CanGoTo(s.Key) && steps[s.Key] != unreachableStep)
+				if (CanGoTo(s.Key) && steps.TryGet(s.Key, out var step) && step != unreachableStep)
 				{
 					reachables.Add(s.Key);
 				}
@@ -295,9 +295,9 @@ namespace takashicompany.Unity.Navigator
 					continue;
 				}
 
-				if (lowerestStep > steps[current.x, current.y])
+				if (steps.TryGet(current, out var step) &&  lowerestStep > step)
 				{
-					lowerestStep = steps[current.x, current.y];
+					lowerestStep = step;
 					direction = d;
 				}
 			}
@@ -311,26 +311,33 @@ namespace takashicompany.Unity.Navigator
 			return GetRoute(from, to);
 		}
 
-		public bool TryGetRoute(Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
-		{
-			route = GetRoute(from, to, enableSlant, iteration);
-			return route != null && route.Length > 0;
-		}
+		// public bool TryGetRoute(Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
+		// {
+		// 	route = GetRoute(from, to, enableSlant, iteration);
+		// 	return route != null && route.Length > 0;
+		// }
 
 		/// <summary>
 		/// 経路を取得する
 		/// </summary>
-		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4)
+		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4, bool useCache = true)
 		{
-			var steps = GetSteps(to, iteration);
-
+			var steps = GetSteps(to, iteration, useCache);
+			
 			return GetRoute(steps, from, to, enableSlant);
 		}
 
 		public Vector2Int[] GetRoute(Map2d<int> steps, Vector2Int from, Vector2Int to, bool enableSlant = false)
 		{
+			var hasStep = steps.TryGet(from, out var step);
 
-			if (steps[from.x, from.y] == unreachableStep)
+			if (!hasStep)
+			{
+				Debug.LogError(from + "は未登録です。");
+				return null;
+			}
+
+			if (step == unreachableStep)
 			{
 				Debug.LogError(from + "は到達できない場所です。");
 				return null;
@@ -393,7 +400,9 @@ namespace takashicompany.Unity.Navigator
 				return false;
 			}
 
-			return Get(p);
+			var b = TryGet(p, out var v);
+
+			return b && v;
 		}
 
 		public bool CanGoTo(int step)
@@ -409,10 +418,10 @@ namespace takashicompany.Unity.Navigator
 			return !map.IsInBounds(p);
 		}
 
-		public static bool TryGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4)
+		public static bool TryGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4, bool useCache = true)
 		{
-			route = self.GetRoute(from, to, enableSlant, iteration);
-			return route != null && route.Length > 0;
+			route = self.GetRoute(from, to, enableSlant, iteration, useCache);
+			return route != null && route.Length > 0 && route[route.Length - 1] == to;
 		}
 	}
 }

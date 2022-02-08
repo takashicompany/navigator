@@ -48,7 +48,10 @@ namespace takashicompany.Unity.Navigator
 				
 				_grids.Foreach(v2int =>
 				{
-					var reachable = _map[v2int];
+					if (!_map.TryGet(v2int, out var reachable))
+					{
+						return;
+					}
 					
 					var p = Utils.GetPositionOnGrid(_grids, v2int, _unitPerGrid).ToV3XZ();
 

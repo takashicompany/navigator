@@ -50,21 +50,31 @@ namespace takashicompany.Unity.Navigator
 
 		public T this[int x, int y]
 		{
-			get
-			{
-				return _dict[new Vector2Int(x, y)];
-			}
+			// get
+			// {
+			// 	return _dict[new Vector2Int(x, y)];
+			// }
 
 			set
 			{
 				_dict[new Vector2Int(x, y)] = value;
+				UpdateSize(new Vector2Int(x, y));
 			}
 		}
 
 		public T this[Vector2Int p]
 		{
-			get { return _dict[p]; }
-			set { _dict[p] = value; }
+			// get { return _dict[p]; }
+			set
+			{
+				_dict[p] = value;
+				UpdateSize(p);
+			}
+		}
+
+		public bool TryGet(Vector2Int p, out T v)
+		{
+			return _dict.TryGetValue(p, out v);
 		}
 
 		public IEnumerator<KeyValuePair<Vector2Int, T>> GetEnumerator()
@@ -181,6 +191,11 @@ namespace takashicompany.Unity.Navigator
 			}
 
 			throw new System.NotImplementedException();
+		}
+
+		public static Vector3[] ToWorldPoints(this Vector2Int[] route, Vector2 unitPerGrid)
+		{
+			return route.Select(p => new Vector3(p.x * unitPerGrid.x, 0, p.y * unitPerGrid.y)).ToArray();
 		}
 	}
 
