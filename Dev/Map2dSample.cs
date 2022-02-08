@@ -14,7 +14,7 @@ namespace takashicompany.Unity.Navigator.Dev
 		[SerializeField]
 		private bool _slant;
 
-		private StaticMap2d _map;
+		private SimpleNavigator2d _navigator;
 
 		private Vector2Int? _from;
 
@@ -42,13 +42,14 @@ namespace takashicompany.Unity.Navigator.Dev
 				}
 			}
 
-			_map = new StaticMap2d(maps);
-			
+			var map = new Map2d<bool>(maps);
+			_navigator = new SimpleNavigator2d(map);
 		}
 
 		private void OnGUI()
 		{
-			var grid = new IMGrid(_map.GetWidth(), _map.GetHeight());
+			var size = _navigator.GetSize();
+			var grid = new IMGrid(size.x, size.y);
 
 			switch (_clickCount % 3)
 			{
@@ -56,7 +57,7 @@ namespace takashicompany.Unity.Navigator.Dev
 					{
 						grid.Foreach((x, y) =>
 						{
-							grid.Button(x, y, _map.Get(x, y) ? "◯" : "x", () =>
+							grid.Button(x, y, _navigator.Get(new Vector2Int(x, y)) ? "◯" : "x", () =>
 							{
 								_to = new Vector2Int(x, y);
 								_clickCount++;
@@ -66,7 +67,7 @@ namespace takashicompany.Unity.Navigator.Dev
 					break;
 				case 1:	// from
 					{
-						var steps = _map.GetSteps(_to.Value);
+						var steps = _navigator.GetSteps(_to.Value);
 						grid.Foreach((x, y) =>
 						{
 							var s = steps[x, y];
@@ -83,7 +84,7 @@ namespace takashicompany.Unity.Navigator.Dev
 					break;
 				case 2: // reset
 					{
-						var route = _map.GetRoute(_from.Value, _to.Value, _slant);
+						var route = _navigator.GetRoute(_from.Value, _to.Value, _slant);
 
 						grid.Foreach((x, y) =>
 						{

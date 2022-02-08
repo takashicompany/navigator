@@ -13,16 +13,18 @@ namespace takashicompany.Unity.Navigator
 		[SerializeField]
 		private Vector2 _unitPerGrid = Vector2.one;
 
+		public Vector2 unitPerGrid => _unitPerGrid;
+
 		[SerializeField]
 		private LayerMask _groundLayers;
 
 		[SerializeField]
 		private LayerMask _blockLayers;
 
-		private StaticMap2d _map;
+		private Map2d<bool> _map;
 
 		[ContextMenu("build map")]
-		public StaticMap2d BuildMap()
+		public Map2d<bool> BuildMap()
 		{
 			_map = BuildMapByOverlapBox(_grids, _unitPerGrid, _groundLayers, _blockLayers);
 
@@ -46,7 +48,7 @@ namespace takashicompany.Unity.Navigator
 				
 				_grids.Foreach(v2int =>
 				{
-					var reachable = _map.Get(v2int);
+					var reachable = _map[v2int];
 					
 					var p = Utils.GetPositionOnGrid(_grids, v2int, _unitPerGrid).ToV3XZ();
 
@@ -64,7 +66,7 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
-		public static StaticMap2d BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
+		public static Map2d<bool> BuildMapByOverlapBox(Vector2Int grids, Vector2 unitPerGrid, LayerMask groundLayers, LayerMask blockLayers)
 		{
 			var points = new bool[grids.x, grids.y];
 
@@ -93,7 +95,7 @@ namespace takashicompany.Unity.Navigator
 				}
 			});
 
-			return new StaticMap2d(points);
+			return new Map2d<bool>(points);
 		}
 	}
 }

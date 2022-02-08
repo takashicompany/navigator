@@ -20,45 +20,140 @@ namespace takashicompany.Unity.Navigator
 		public static readonly Direction[] directions = new Direction[] { Direction.Foward, Direction.Right, Direction.Back, Direction.Left };
 	}
 
-	public abstract class Map2d<T> : Map2d
+	public class Map2d<T> : IEnumerable<KeyValuePair<Vector2Int, T>>
 	{
-		private T[,] _points;
-		
-		public Map2d(T[,] points)
+		private Dictionary<Vector2Int, T> _dict;
+
+		private Vector2Int _min;
+		private Vector2Int _max;
+
+		public Map2d()
 		{
-			_points = points;
+			_dict = new Dictionary<Vector2Int, T>();
 		}
 
-		public T Get(int x, int y)
+		public Map2d(Dictionary<Vector2Int, T> dict)
 		{
-			return _points[x, y];
+			_dict = dict;
+			UpdateSize();
 		}
 
-		public T Get(Vector2Int p)
+		public Map2d(T[,] array) : this()
 		{
-			return Get(p.x, p.y);
-		}
-		
-		public abstract Vector2Int[] GetRoute(int fromX, int fromY, int toX, int toY);
+			array.Foreach((v2Int, v) =>
+			{
+				_dict.Add(v2Int, v);
+			});
 
-		public bool IsInBounds(int x, int y)
-		{
-			return 0 <= x && x < _points.GetLength(0) && 0 <= y && y < _points.GetLength(1);
+			UpdateSize();
 		}
 
-		public bool IsOutOfBounds(int x, int y)
+		public T this[int x, int y]
 		{
-			return !IsInBounds(x, y);
+			get
+			{
+				return _dict[new Vector2Int(x, y)];
+			}
+
+			set
+			{
+				_dict[new Vector2Int(x, y)] = value;
+			}
+		}
+
+		public T this[Vector2Int p]
+		{
+			get { return _dict[p]; }
+			set { _dict[p] = value; }
+		}
+
+		public IEnumerator<KeyValuePair<Vector2Int, T>> GetEnumerator()
+		{
+			return _dict.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return _dict.GetEnumerator();
+		}
+
+		protected void UpdateSize()
+		{
+			var minX = int.MaxValue;
+			var minY = int.MaxValue;
+
+			var maxX = int.MinValue;
+			var maxY = int.MinValue;
+
+			foreach (var kvp in _dict)
+			{
+				var pos = kvp.Key;
+
+				if (pos.x < minX)
+				{
+					minX = pos.x;
+				}
+
+				if (pos.y < minY)
+				{
+					minY = pos.y;
+				}
+
+				if (pos.x > maxX)
+				{
+					maxX = pos.x;
+				}
+
+				if (pos.y > maxY)
+				{
+					maxY = pos.y;
+				}
+			}
+
+			_min = new Vector2Int(minX, minY);
+			_max = new Vector2Int(maxX, maxY);
+		}
+
+		protected void UpdateSize(Vector2Int pos)
+		{
+			var minX = _min.x;
+			var minY = _min.y;
+
+			var maxX = _max.x;
+			var maxY = _max.y;
+
+			if (pos.x < minX)
+			{
+				minX = pos.x;
+			}
+
+			if (pos.y < minY)
+			{
+				minY = pos.y;
+			}
+
+			if (pos.x > maxX)
+			{
+				maxX = pos.x;
+			}
+
+			if (pos.y > maxY)
+			{
+				maxY = pos.y;
+			}
+
+			_min = new Vector2Int(minX, minY);
+			_max = new Vector2Int(maxX, maxY);
 		}
 
 		public int GetWidth()
 		{
-			return _points.GetLength(0);
+			return _max.x - _min.x + 1;
 		}
 
 		public int GetHeight()
 		{
-			return _points.GetLength(1);
+			return _max.y - _min.y + 1;
 		}
 
 		public Vector2Int GetSize()
@@ -442,6 +537,7 @@ namespace takashicompany.Unity.Navigator
 			return step != unreachableStep;
 		}
 	}
+
 
 	public static class MapExtension
 	{
