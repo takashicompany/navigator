@@ -24,7 +24,7 @@ namespace takashicompany.Unity.Navigator
 
 	public abstract class Navigator2d<T> : INavigator<T>
 	{
-		private Map2d<T> _map;
+		protected Map2d<T> _map;
 		
 		public Navigator2d(Map2d<T> map)
 		{
@@ -40,7 +40,7 @@ namespace takashicompany.Unity.Navigator
 
 		public bool IsInBounds(Vector2Int p)
 		{
-			return 0 <= p.x && p.x < _map.GetWidth() && 0 <= p.y && p.y < _map.GetHeight();
+			return _map.IsInBounds(p);
 		}
 
 		public Vector2Int GetSize()
@@ -78,12 +78,10 @@ namespace takashicompany.Unity.Navigator
 		public void PrepareStepCache()
 		{
 			var size = GetSize();
-			for (var x = 0; x < size.x; x++)
+
+			foreach (var kvp in _map)
 			{
-				for (var y = 0; y < size.y; y++)
-				{
-					GetSteps(new Vector2Int(x, y));
-				}
+				GetSteps(kvp.Key);
 			}
 		}
 
@@ -128,12 +126,9 @@ namespace takashicompany.Unity.Navigator
 			// 全マスをハッシュセットに登録
 			var posHashSet = new HashSet<Vector2Int>();
 
-			for (var x = 0; x < width; x++)
+			foreach (var kvp in _map)
 			{
-				for (var y = 0; y < height; y++)
-				{
-					posHashSet.Add(new Vector2Int(x, y));
-				}
+				posHashSet.Add(kvp.Key);
 			}
 			
 			// 全マスを対象のマスとの距離でソートする
@@ -142,13 +137,10 @@ namespace takashicompany.Unity.Navigator
 
 			steps = new Map2d<int>();
 
-			for (var x = 0; x < width; x++)
+			foreach (var kvp in _map)
 			{
-				for (var y = 0; y < height; y++)
-				{
-					// 一旦、対象のマスからの距離を最大値にしておく
-					steps[x, y] = unreachableStep;
-				}
+				// 一旦、対象のマスからの距離を最大値にしておく
+				steps[kvp.Key] = unreachableStep;
 			}
 
 			steps[point.x, point.y] = 0;	// 目的地なので距離は0
@@ -333,13 +325,13 @@ namespace takashicompany.Unity.Navigator
 
 			if (!hasStep)
 			{
-				Debug.LogError(from + "は未登録です。");
+				// Debug.LogError(from + "は未登録です。");
 				return null;
 			}
 
 			if (step == unreachableStep)
 			{
-				Debug.LogError(from + "は到達できない場所です。");
+				// Debug.LogError(from + "は到達できない場所です。");
 				return null;
 			}
 

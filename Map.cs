@@ -170,6 +170,11 @@ namespace takashicompany.Unity.Navigator
 		{
 			return new Vector2Int(GetWidth(), GetHeight());
 		}
+
+		public bool IsInBounds(Vector2Int p)
+		{
+			return _min.x <= p.x && p.x <= _max.x && _min.y <= p.y && p.y <= _max.y;
+		}
 	}
 
 	
