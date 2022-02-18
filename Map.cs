@@ -198,9 +198,14 @@ namespace takashicompany.Unity.Navigator
 			throw new System.NotImplementedException();
 		}
 
-		public static Vector3[] ToWorldPoints(this Vector2Int[] route, Vector2 unitPerGrid)
+		public static Vector3[] ToWorldPoints(this IList<Vector2Int> route, Vector2 unitPerGrid)
 		{
 			return route.Select(p => new Vector3(p.x * unitPerGrid.x, 0, p.y * unitPerGrid.y)).ToArray();
+		}
+
+		public static Vector3 ToWorldPoint(Vector2Int p, Vector2 unitPerGrid)
+		{
+			return new Vector3(p.x * unitPerGrid.x, 0, p.y * unitPerGrid.y);
 		}
 	}
 
