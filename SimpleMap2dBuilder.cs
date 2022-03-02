@@ -5,7 +5,7 @@ namespace takashicompany.Unity.Navigator
 	using System.Linq;
 	using UnityEngine;
 
-	public class Map2dBuilder : MonoBehaviour
+	public class SimpleMap2dBuilder : MonoBehaviour
 	{
 		[SerializeField]
 		private Transform _root;
