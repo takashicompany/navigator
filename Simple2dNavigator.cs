@@ -52,7 +52,7 @@ namespace takashicompany.Unity.Navigator
 	/// <summary>
 	/// 静的な2次元マップ
 	/// </summary>
-	public class SimpleNavigator2d : Navigator2d<bool>, ICustomNavigator
+	public abstract class SimpleNavigator2d<T> : Navigator2d<T>, ICustomNavigator
 	{
 		public static readonly int unreachableStep = int.MaxValue;
 
@@ -67,7 +67,7 @@ namespace takashicompany.Unity.Navigator
 		/// <returns></returns>
 		private Dictionary<Vector2Int, IEnumerable<Vector2Int>> _pointsSortedByDistances = new Dictionary<Vector2Int, IEnumerable<Vector2Int>>();
 
-		public SimpleNavigator2d(Map2d<bool> map) : base(map)
+		public SimpleNavigator2d(Map2d<T> map) : base(map)
 		{
 			var size = GetSize();
 		}
@@ -382,10 +382,40 @@ namespace takashicompany.Unity.Navigator
 			return route.ToArray();
 		}
 
+		// /// <summary>
+		// /// 対象のマスは通行可能か
+		// /// </summary>
+		// public bool CanGoTo(Vector2Int p)
+		// {
+		// 	if (this.IsOutOfBounds(p))
+		// 	{
+		// 		return false;
+		// 	}
+
+		// 	var b = TryGet(p, out var v);
+
+		// 	return b && v;
+		// }
+
 		/// <summary>
 		/// 対象のマスは通行可能か
 		/// </summary>
-		public bool CanGoTo(Vector2Int p)
+		public abstract bool CanGoTo(Vector2Int p);
+
+		public bool CanGoTo(int step)
+		{
+			return step != unreachableStep;
+		}
+	}
+
+	public class SimpleNavigator2d : SimpleNavigator2d<bool>
+	{
+		public SimpleNavigator2d(Map2d<bool> map) : base(map)
+		{
+			
+		}
+
+		public override bool CanGoTo(Vector2Int p)
 		{
 			if (this.IsOutOfBounds(p))
 			{
@@ -395,11 +425,6 @@ namespace takashicompany.Unity.Navigator
 			var b = TryGet(p, out var v);
 
 			return b && v;
-		}
-
-		public bool CanGoTo(int step)
-		{
-			return step != unreachableStep;
 		}
 	}
 
