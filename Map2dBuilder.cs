@@ -45,7 +45,7 @@ namespace takashicompany.Unity.Navigator
 					var point = kvp.Key;
 					var walkable = kvp.Value;
 
-					Gizmos.color = GetGizmosGridColor(point);
+					Gizmos.color = GetGizmosGridColor(point, _map);
 
 					var p = new Vector3(unitPerGrid.x * point.x, 0, unitPerGrid.y * point.y);
 
@@ -54,7 +54,7 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
-		protected abstract Color GetGizmosGridColor(Vector2Int p);
+		protected abstract Color GetGizmosGridColor(Vector2Int p, Map2d<T> map);
 
 		public Map2d<T> BuildMapByOverlapBox(Transform root, Vector2 unitPerGrid)
 		{
