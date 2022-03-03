@@ -5,7 +5,7 @@ namespace takashicompany.Unity.Navigator
 	using System.Linq;
 	using UnityEngine;
 
-	public abstract class Map2dBuilder<T> : MonoBehaviour
+	public abstract class Map2dBuilder<T, U> : MonoBehaviour where T : Map2d<U>, new()
 	{
 		[SerializeField]
 		private Transform _root;
@@ -21,10 +21,10 @@ namespace takashicompany.Unity.Navigator
 		// [SerializeField, Header("歩行不可能として扱うレイヤー")]
 		// private LayerMask _blockLayers;
 
-		protected Map2d<T> _map;
+		protected T _map;
 
 		[ContextMenu("build map")]
-		public Map2d<T> BuildMap()
+		public T BuildMap()
 		{
 			_map = BuildMapByOverlapBox(_root, _unitPerGrid);
 
@@ -45,7 +45,7 @@ namespace takashicompany.Unity.Navigator
 					var point = kvp.Key;
 					var walkable = kvp.Value;
 
-					Gizmos.color = GetGizmosGridColor(point, _map);
+					Gizmos.color = GetGizmosGridColor(_map, point);
 
 					var p = new Vector3(unitPerGrid.x * point.x, 0, unitPerGrid.y * point.y);
 
@@ -54,16 +54,14 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
-		protected abstract Color GetGizmosGridColor(Vector2Int p, Map2d<T> map);
-
-		public Map2d<T> BuildMapByOverlapBox(Transform root, Vector2 unitPerGrid)
+		public T BuildMapByOverlapBox(Transform root, Vector2 unitPerGrid)
 		{
 			if (root == null)
 			{
 				return null;
 			}
 
-			var map = new Map2d<T>();
+			var map = new T();
 
 			var colliders = root.GetComponentsInChildren<Collider>();
 
@@ -84,15 +82,16 @@ namespace takashicompany.Unity.Navigator
 			{
 				for (int z = min.y; z <= max.y; z++)
 				{
-					Process(x, z, map);
+					Process(map, new Vector2Int(x, z));
 				}
 			}
 
 			return map;
 		}
 
-		public abstract void Process(int x, int z, Map2d<T> map);
-		
+		protected abstract void Process(T map, Vector2Int p);
+		protected abstract Color GetGizmosGridColor(T map, Vector2Int p);
+
 
 		public static Vector2Int GetGridPosition(Vector3 p, Vector2 unitPerGrid)
 		{

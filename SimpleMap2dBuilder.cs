@@ -5,7 +5,7 @@ namespace takashicompany.Unity.Navigator
 	using System.Linq;
 	using UnityEngine;
 
-	public class SimpleMap2dBuilder : Map2dBuilder<bool>
+	public class SimpleMap2dBuilder : Map2dBuilder<Map2d<bool>, bool>
 	{
 
 		[SerializeField, Header("地面(歩行可能)として扱うレイヤー")]
@@ -15,9 +15,12 @@ namespace takashicompany.Unity.Navigator
 		private LayerMask _blockLayers;
 
 		
-		public override void Process(int x, int z, Map2d<bool> map)
+		protected override void Process(Map2d<bool> map, Vector2Int point)
 		{
 			var half = unitPerGrid / 2f;
+
+			var x = point.x;
+			var z = point.y;
 
 			var p = new Vector3(unitPerGrid.x * x, 0, unitPerGrid.y * z);
 
@@ -40,7 +43,7 @@ namespace takashicompany.Unity.Navigator
 			map[x, z] = false;
 		}
 
-		protected override Color GetGizmosGridColor(Vector2Int p, Map2d<bool> map)
+		protected override Color GetGizmosGridColor(Map2d<bool> map, Vector2Int p)
 		{
 			if (map.TryGet(p, out var walkable))
 			{
