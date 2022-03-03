@@ -15,13 +15,13 @@ namespace takashicompany.Unity.Navigator
 
 		public Vector2 unitPerGrid => _unitPerGrid;
 
-		[SerializeField, Header("地面(歩行可能)として扱うレイヤー")]
-		private LayerMask _groundLayers;
+		// [SerializeField, Header("地面(歩行可能)として扱うレイヤー")]
+		// private LayerMask _groundLayers;
 
-		[SerializeField, Header("歩行不可能として扱うレイヤー")]
-		private LayerMask _blockLayers;
+		// [SerializeField, Header("歩行不可能として扱うレイヤー")]
+		// private LayerMask _blockLayers;
 
-		private Map2d<T> _map;
+		protected Map2d<T> _map;
 
 		[ContextMenu("build map")]
 		public Map2d<T> BuildMap()
@@ -85,26 +85,6 @@ namespace takashicompany.Unity.Navigator
 				for (int z = min.y; z <= max.y; z++)
 				{
 					Process(x, z, map);
-
-					// var p = new Vector3(unitPerGrid.x * x, 0, unitPerGrid.y * z);
-
-					// var blocks = Physics.OverlapBox(p, half * 0.99f, Quaternion.identity, blockLayers);
-
-					// if (blocks != null && blocks.Length > 0)
-					// {
-					// 	map[x, z] = false;
-					// 	continue;
-					// }
-
-					// var ground = Physics.OverlapBox(p, half * 0.99f, Quaternion.identity, groundLayers);
-
-					// if (ground != null && ground.Length > 0)
-					// {
-					// 	map[x, z] = true;
-					// 	continue;
-					// }
-
-					// map[x, z] = false;
 				}
 			}
 
