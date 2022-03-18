@@ -22,7 +22,7 @@ namespace takashicompany.Unity.Navigator
 
 	public class Map2d<T> : IEnumerable<KeyValuePair<Vector2Int, T>>
 	{
-		private Dictionary<Vector2Int, T> _dict;
+		protected Dictionary<Vector2Int, T> _dict;
 
 		private Vector2Int _min;
 		private Vector2Int _max;
@@ -48,7 +48,7 @@ namespace takashicompany.Unity.Navigator
 			UpdateSize();
 		}
 
-		public T this[int x, int y]
+		public virtual T this[int x, int y]
 		{
 			// get
 			// {
