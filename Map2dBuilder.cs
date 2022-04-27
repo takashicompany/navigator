@@ -44,9 +44,10 @@ namespace takashicompany.Unity.Navigator
 				{
 					var point = kvp.Key;
 					var walkable = kvp.Value;
-
-					Gizmos.color = GetGizmosGridColor(_map, point);
-
+					var color = GetGizmosGridColor(_map, point);
+					color.a = 0.5f;
+					Gizmos.color = color;
+					
 					var p = new Vector3(unitPerGrid.x * point.x, 0, unitPerGrid.y * point.y);
 
 					Gizmos.DrawCube(p, unitPerGrid.ToV3XZ() * 0.975f);
