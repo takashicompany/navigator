@@ -440,5 +440,25 @@ namespace takashicompany.Unity.Navigator
 			route = self.GetRoute(from, to, enableSlant, iteration, useCache);
 			return route != null && route.Length > 0 && route[route.Length - 1] == to;
 		}
+
+		public static IEnumerator CoGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		{
+			var complete = false;
+			var success = false;
+			Vector2Int[] route = null;
+
+			System.Threading.Tasks.Task.Run(() =>
+			{
+				success = self.TryGetRoute(from, to, out route, enableSlant, iteration, useCache);
+				complete = true;
+			});
+
+			while (!complete)
+			{
+				yield return null;
+			}
+
+			callback?.Invoke(success, route);
+		}
 	}
 }
