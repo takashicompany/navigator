@@ -31,7 +31,7 @@ namespace takashicompany.Unity.Navigator
 			return _map;
 		}
 
-		private void OnDrawGizmos()
+		protected virtual void OnDrawGizmos()
 		{
 			if (!Application.isPlaying)
 			{
