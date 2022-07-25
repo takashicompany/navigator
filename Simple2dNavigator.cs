@@ -406,6 +406,78 @@ namespace takashicompany.Unity.Navigator
 		{
 			return step != unreachableStep;
 		}
+
+		public class Param
+		{
+			public Vector2Int from { get; private set; }
+			public Vector2Int to { get; private set; }
+			public bool enableSlant { get; private set; }
+			public int iteration { get; private set; }
+			public bool useCache { get; private set; }
+			public System.Action<bool, Vector2Int[]> callback { get; private set; }
+
+			public Param(Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
+			{
+				this.from = from;
+				this.to = to;
+				this.callback = callback;
+				this.enableSlant = enableSlant;
+				this.iteration = iteration;
+				this.useCache = useCache;
+			}
+		}
+
+		private Queue<Param> _queue = new Queue<Param>();
+		private bool _isWorkingThread;
+
+		private void ThreadTask()
+		{
+			if (_queue.Count > 0 && !_isWorkingThread)
+			{
+				_isWorkingThread = true;
+				var p = _queue.Dequeue();
+
+				System.Threading.Tasks.Task.Run(() =>
+				{
+					var success = this.TryGetRoute(p.from, p.to, out var route, p.enableSlant, p.iteration, p.useCache);
+					p.callback.Invoke(success, route);
+					_isWorkingThread = false;
+					ThreadTask();
+				});
+			}
+		}
+
+		public void SyncTryGetRoute(Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		{
+			_queue.Enqueue(new Param(from, to, callback, enableSlant, iteration, useCache));
+			ThreadTask();
+		}
+
+		public IEnumerator CoSyncTryGetRoute(Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		{
+			var wait = true;
+
+			var success = false;
+			Vector2Int[] route = null;
+
+			_queue.Enqueue(new Param(from, to, (s, r) =>
+			{
+				wait = false;
+
+				success = s;
+				route = r;
+
+			}, enableSlant, iteration, useCache));
+
+			ThreadTask();
+
+			while (wait)
+			{
+				yield return null;
+			}
+
+			callback(success, route);
+		}
 	}
 
 	public class SimpleNavigator2d : SimpleNavigator2d<bool>
