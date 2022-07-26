@@ -407,7 +407,7 @@ namespace takashicompany.Unity.Navigator
 			return step != unreachableStep;
 		}
 
-		public class Param
+		private class Param
 		{
 			public Vector2Int from { get; private set; }
 			public Vector2Int to { get; private set; }
@@ -447,12 +447,15 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
+
+		[System.Obsolete("ちゃんと動作しているか怪しい")]
 		public void SyncTryGetRoute(Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
 		{
 			_queue.Enqueue(new Param(from, to, callback, enableSlant, iteration, useCache));
 			ThreadTask();
 		}
 
+		[System.Obsolete("ちゃんと動作しているか怪しい")]
 		public IEnumerator CoSyncTryGetRoute(Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
 		{
 			var wait = true;
