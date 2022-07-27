@@ -19,7 +19,7 @@ namespace takashicompany.Unity.Navigator
 
 	public interface ICustomNavigator : INavigator
 	{
-		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4, bool useCache = true);
+		Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4, bool useCache = true, params Vector2Int[] ignorePoints);
 	}
 
 	public abstract class Navigator2d<T> : INavigator<T>
@@ -107,15 +107,15 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// あるマスからの歩数を計算する
 		/// </summary>
-		public Map2d<int> GetSteps(Vector2Int to, int iteration = 4, bool useCache = true)
+		public Map2d<int> GetSteps(Vector2Int to, int iteration = 4, bool useCache = true, params Vector2Int[] ignorePoints)
 		{
-			return GetSteps(to, out _, iteration, useCache);
+			return GetSteps(to, out _, iteration, useCache, ignorePoints);
 		}
 		
 		/// <summary>
 		/// あるマスからの歩数を計算する
 		/// </summary>
-		public Map2d<int> GetSteps(Vector2Int point, out List<Vector2Int> pointsSortedByDinstance, int iteration = 4, bool useCache = true)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
+		public Map2d<int> GetSteps(Vector2Int point, out List<Vector2Int> pointsSortedByDinstance, int iteration = 4, bool useCache = true, params Vector2Int[] ignorePoints)		// stepは都度生成せずに対象の値を持っておけば使い回せる気がする
 		{
 			if (useCache && TryGetCache(point, out var steps, out var psd))
 			{
@@ -161,7 +161,7 @@ namespace takashicompany.Unity.Navigator
 						continue;
 					}
 
-					var step = CalcStepByNexts(steps, p);
+					var step = CalcStepByNexts(steps, p, ignorePoints);
 
 					steps[p.x, p.y] = step;
 				}
@@ -177,14 +177,14 @@ namespace takashicompany.Unity.Navigator
 			return steps;
 		}
 
-		public List<Vector2Int> GetReachablePoints(Vector2Int from, int iteration = 4)
+		public List<Vector2Int> GetReachablePoints(Vector2Int from, int iteration = 4, params Vector2Int[] ignorePoints)
 		{
-			var steps = GetSteps(from, iteration);
+			var steps = GetSteps(from, iteration, ignorePoints: ignorePoints);
 
 			return GetReachablePoints(steps, from);
 		}
 
-		public List<Vector2Int> GetReachablePoints(Map2d<int> steps, Vector2Int from)
+		public List<Vector2Int> GetReachablePoints(Map2d<int> steps, Vector2Int from, params Vector2Int[] ignorePoints)
 		{
 			var reachables = new List<Vector2Int>();
 			foreach (var s in steps)
@@ -201,7 +201,7 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// マス毎の歩数を見て、未到達領域を再計算する。計算が進捗しなくなったら終わり
 		/// </summary>
-		public int TryFillUnreachable(Map2d<int> steps)
+		public int TryFillUnreachable(Map2d<int> steps, params Vector2Int[] ignorePoints)
 		{
 			var unreachables = new HashSet<Vector2Int>();
 
@@ -230,7 +230,7 @@ namespace takashicompany.Unity.Navigator
 
 				foreach (var p in unreachables)
 				{
-					var step = CalcStepByNexts(steps, p);
+					var step = CalcStepByNexts(steps, p, ignorePoints);
 
 					if (step != unreachableStep)
 					{
@@ -252,9 +252,9 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// 対象のマスの上下左右から一番低い歩数を見つけて、それに1足したものを返す
 		/// </summary>
-		public int CalcStepByNexts(Map2d<int> steps, Vector2Int target)
+		public int CalcStepByNexts(Map2d<int> steps, Vector2Int target, params Vector2Int[] ignorePoints)
 		{
-			if (TryGetLowerestStepByNexts(steps, target, out var lowerestStep, out _))
+			if (TryGetLowerestStepByNexts(steps, target, out var lowerestStep, out _, ignorePoints))
 			{
 				if (lowerestStep != unreachableStep) lowerestStep++;
 
@@ -267,12 +267,14 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// 対象のマスの四方を見て、一番歩数の低いマスと歩数を返す
 		/// </summary>
-		private bool TryGetLowerestStepByNexts(Map2d<int> steps, Vector2Int target, out int lowerestStep, out Map2d.Direction direction)
+		private bool TryGetLowerestStepByNexts(Map2d<int> steps, Vector2Int target, out int lowerestStep, out Map2d.Direction direction, params Vector2Int[] ignorePoints)
 		{
 			direction = Map2d.Direction.None;
 
+			var isIgnored = ignorePoints.Contains(target);
+
 			// 通行できないマスはそもそも計算しない
-			if (!CanGoTo((Vector2Int)target))
+			if (!CanGoTo((Vector2Int)target) && !isIgnored)
 			{
 				lowerestStep = unreachableStep;
 				return false;
@@ -285,7 +287,7 @@ namespace takashicompany.Unity.Navigator
 				var current = target + d.ToV2Int();
 
 				// 通行できないマスは参照しない
-				if (!CanGoTo(current))
+				if (!CanGoTo(current) && !isIgnored)
 				{
 					continue;
 				}
@@ -315,9 +317,9 @@ namespace takashicompany.Unity.Navigator
 		/// <summary>
 		/// 経路を取得する
 		/// </summary>
-		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		public Vector2Int[] GetRoute(Vector2Int from, Vector2Int to, bool enableSlant = false, int iteration = 4, bool useCache = true, params Vector2Int[] ignorePoints)
 		{
-			var steps = GetSteps(to, iteration, useCache);
+			var steps = GetSteps(to, iteration, useCache, ignorePoints);
 			
 			return GetRoute(steps, from, to, enableSlant);
 		}
@@ -543,7 +545,7 @@ namespace takashicompany.Unity.Navigator
 			callback?.Invoke(success, route);
 		}
 
-		public static void GetRouteAsync(this ICustomNavigator self, Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		public static void GetRouteAsync(this ICustomNavigator self, Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true, params Vector2Int[] ignorePoints)
 		{
 			System.Threading.Tasks.Task.Run(() =>
 			{
