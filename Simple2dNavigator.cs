@@ -104,6 +104,9 @@ namespace takashicompany.Unity.Navigator
 			return false;
 		}
 
+		/// <summary>
+		/// あるマスからの歩数を計算する
+		/// </summary>
 		public Map2d<int> GetSteps(Vector2Int to, int iteration = 4, bool useCache = true)
 		{
 			return GetSteps(to, out _, iteration, useCache);
@@ -516,6 +519,10 @@ namespace takashicompany.Unity.Navigator
 			return route != null && route.Length > 0 && route[route.Length - 1] == to;
 		}
 
+
+		/// <summary>
+		/// たまに帰ってこないことがあるので、呼び出し側でも待機処理入れてくれ
+		/// </summary>
 		public static IEnumerator CoGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
 		{
 			var complete = false;
@@ -534,6 +541,15 @@ namespace takashicompany.Unity.Navigator
 			}
 
 			callback?.Invoke(success, route);
+		}
+
+		public static void GetRouteAsync(this ICustomNavigator self, Vector2Int from, Vector2Int to, System.Action<bool, Vector2Int[]> callback, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		{
+			System.Threading.Tasks.Task.Run(() =>
+			{
+				var success = self.TryGetRoute(from, to, out var route, enableSlant, iteration, useCache);
+				callback?.Invoke(success, route);
+			});
 		}
 	}
 }
