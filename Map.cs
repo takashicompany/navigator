@@ -72,6 +72,11 @@ namespace takashicompany.Unity.Navigator
 			}
 		}
 
+		public Dictionary<Vector2Int, T> CopyMapDictionary()
+		{
+			return new Dictionary<Vector2Int, T>(_dict);
+		}
+
 		public bool TryGet(Vector2Int p, out T v)
 		{
 			return _dict.TryGetValue(p, out v);
