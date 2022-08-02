@@ -273,6 +273,8 @@ namespace takashicompany.Unity.Navigator
 
 			var isIgnored = ignorePoints.Contains(target);
 
+			// Debug.Log(isIgnored);
+
 			// 通行できないマスはそもそも計算しない
 			if (!CanGoTo((Vector2Int)target) && !isIgnored)
 			{
@@ -515,9 +517,9 @@ namespace takashicompany.Unity.Navigator
 			return !map.IsInBounds(p);
 		}
 
-		public static bool TryGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4, bool useCache = true)
+		public static bool TryGetRoute(this ICustomNavigator self, Vector2Int from, Vector2Int to, out Vector2Int[] route, bool enableSlant = false, int iteration = 4, bool useCache = true, params Vector2Int[] ignorePoints)
 		{
-			route = self.GetRoute(from, to, enableSlant, iteration, useCache);
+			route = self.GetRoute(from, to, enableSlant, iteration, useCache, ignorePoints);
 			return route != null && route.Length > 0 && route[route.Length - 1] == to;
 		}
 
@@ -549,7 +551,7 @@ namespace takashicompany.Unity.Navigator
 		{
 			System.Threading.Tasks.Task.Run(() =>
 			{
-				var success = self.TryGetRoute(from, to, out var route, enableSlant, iteration, useCache);
+				var success = self.TryGetRoute(from, to, out var route, enableSlant, iteration, useCache, ignorePoints);
 				callback?.Invoke(success, route);
 			});
 		}
