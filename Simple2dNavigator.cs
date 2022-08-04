@@ -272,9 +272,7 @@ namespace takashicompany.Unity.Navigator
 			direction = Map2d.Direction.None;
 
 			var isIgnored = ignorePoints.Contains(target);
-
-			// Debug.Log(isIgnored);
-
+			
 			// 通行できないマスはそもそも計算しない
 			if (!CanGoTo((Vector2Int)target) && !isIgnored)
 			{
@@ -323,10 +321,10 @@ namespace takashicompany.Unity.Navigator
 		{
 			var steps = GetSteps(to, iteration, useCache, ignorePoints);
 			
-			return GetRoute(steps, from, to, enableSlant);
+			return GetRoute(steps, from, to, enableSlant, ignorePoints);
 		}
 
-		public Vector2Int[] GetRoute(Map2d<int> steps, Vector2Int from, Vector2Int to, bool enableSlant = false)
+		public Vector2Int[] GetRoute(Map2d<int> steps, Vector2Int from, Vector2Int to, bool enableSlant = false, params Vector2Int[] ignorePoints)
 		{
 			var hasStep = steps.TryGet(from, out var step);
 
@@ -348,7 +346,7 @@ namespace takashicompany.Unity.Navigator
 
 			while (current != to)
 			{
-				if (!TryGetLowerestStepByNexts(steps, current, out _, out var direction))
+				if (!TryGetLowerestStepByNexts(steps, current, out _, out var direction, ignorePoints))
 				{
 					// 無いとは思うけど...
 					break;
