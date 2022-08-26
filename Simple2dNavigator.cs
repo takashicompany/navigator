@@ -341,6 +341,12 @@ namespace takashicompany.Unity.Navigator
 			}
 
 			var route = new List<Vector2Int>() { from };
+
+			// 辞書のほうが検索早い気がしているので...
+			var pointsDict = new Dictionary<Vector2Int, int>()
+			{
+				{from, 1 }
+			};
 			
 			var current = from;
 
@@ -353,6 +359,13 @@ namespace takashicompany.Unity.Navigator
 				}
 
 				current += direction.ToV2Int();
+
+				if (pointsDict.ContainsKey(current))
+				{
+					return null;
+				}
+
+				pointsDict.Add(current, 1);  // 値は何でも良い。Keyさえ入っていれば。
 
 				route.Add(current);
 			}
